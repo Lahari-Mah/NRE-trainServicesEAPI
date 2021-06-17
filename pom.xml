@@ -40,6 +40,10 @@
                   <applicationName>${cloudhub.app}</applicationName>
                   <muleVersion>${mule.version}</muleVersion>
                   <workerType>${cloudhub.worker}</workerType>
+                  <properties>
+                    <anypoint.platform.client_id>${apikey.id}</anypoint.platform.client_id>
+                    <anypoint.platform.client_secret>${apikey.secret}</anypoint.platform.client_secret>
+                  </properties>
                   <objectStoreV2>true</objectStoreV2>
                 </cloudHubDeployment>
 				</configuration>
