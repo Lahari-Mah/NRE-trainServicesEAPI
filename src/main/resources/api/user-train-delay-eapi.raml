@@ -1,0 +1,244 @@
+#%RAML 1.0
+title: User-National-Railway-EAPI
+version: 1.0.development
+baseUri: http://localohost:8090/api/
+
+uses:
+  custlib: /exchange_modules/ce59e7c2-b990-4fe5-98a4-b5dba8efff20/customer-library/1.0.0/customer-library.raml
+
+traits:
+  client-id-required: !include /exchange_modules/ce59e7c2-b990-4fe5-98a4-b5dba8efff20/customer-trait/1.0.0/customer-trait.raml
+
+/customers:
+  is:
+    - client-id-required
+  get:
+    description: Retrieve the customer details from the system
+    responses:
+      200:
+        body:
+          application/json:
+            type: custlib.CustomerType
+            examples:
+              output: !include /Examples/customerExample.raml
+      400:
+        body:
+          application/json:
+            example:
+              description: Error message
+              message: Error in retrieving data, Please check through!
+  post:
+    description: Create a customer
+    body:
+      application/json:
+        description: Customer created with respective details
+        type: custlib.CustomerType
+        examples:
+          input: !include /Examples/customerNoIDExample.raml
+    responses:
+      201:
+        body:
+          application/json:
+            example:
+              description: Success Message
+              message: Customer Registered Successfully!
+      400:
+        body:
+          application/json:
+            example:
+              description: Error Message
+              message: Error in inserting data, Please check through!
+  /{id}:
+    is:
+      - client-id-required
+    get:
+      description: Retrieve customer details by ID
+      responses:
+        200:
+          body:
+            application/json:
+              type: custlib.CustomerIdType
+              examples:
+                output: !include /Examples/customerByIdExample.raml
+        400:
+          body:
+            application/json:
+              example:
+                description: Error Message
+                message: Error in retrieving customer details by ID
+    patch:
+      description: Update Customer details by ID
+      body:
+        application/json:
+          type: custlib.CustomerIdType
+          examples:
+            input: !include /Examples/customerByIdExample.raml
+    
+    /subscriptions:
+      is:
+        - client-id-required
+      get:
+        description: Retrieve all subscriptions of customers
+        responses:
+          200:
+            body:
+             application/json:
+              type: custlib.SubscriptionType
+              examples:
+                output: !include /Examples/subscriptionExample.raml
+          400:
+           body:
+            application/json:
+              example:
+                description: Error Message
+                message: Error in retrieving customer subscriptions 
+      post:
+        description: Create subscription for each customer
+        body:
+          application/json:
+            type: custlib.SubscriptionType
+            examples:
+              input: !include /Examples/subscriptionNoIDExample.raml
+        responses:
+          200:
+            body:
+              application/json:
+                example:
+                 description: Success message
+                 message: Subscription added successfully 
+          400:
+            body:
+              application/json:
+                example:
+                  description: Error message
+                  message: Error in creating subscription data, Please check through!
+      /{subscriptionId}:
+        is:
+          - client-id-required
+        get:
+          description: Retrieving each subscription data
+          responses:
+            200:
+              body:
+                application/json:
+                  type: custlib.SubscriptionIdType
+                  examples:
+                    output: !include /Examples/subscriptionByIdExample.raml
+            400:
+              body:
+                application/json:
+                  example:
+                    description: Error Message
+                    message: Error in retrieving specific subscription data
+        patch:
+          description: Update Subscription details by ID
+          body:
+            application/json:
+              type: custlib.SubscriptionIdType
+              examples:
+                input: !include /Examples/subscriptionByIdExample.raml
+        /alerts:
+          is:
+            - client-id-required
+          get:
+            description: Retrieve all alert notifications data under particular subscription
+            responses:
+              200:
+                body:
+                  application/json:
+                    type: custlib.AlertType
+                    examples:
+                      output: !include /Examples/alertsExample.raml
+              400:
+                body:
+                  application/json:
+                    example:
+                      description: Error Message
+                      message: Error in retrieving alert data for each subscription 
+          /{alertId}:
+            is:
+              - client-id-required
+            get:
+              description: Retrieve specific alert notification data
+              responses:
+                200:
+                  body:
+                    application/json:
+                      type: custlib.AlertIdType
+                      examples:
+                        output: !include /Examples/alertByIdExample.raml
+                400:
+                  body:
+                    application/json:
+                      example:
+                        description: Error Message
+                        message: Error in retrieving specific alert data
+  /login:
+    is:
+      - client-id-required
+    post:
+      description: Customer details registered to Okta application
+      body:
+        application/json:
+          type: custlib.CustomerAuthType
+          examples:
+            input: !include /Examples/CustomerAuthExample.raml
+      responses:
+        200:
+          body:
+            application/json:
+              example:
+                output: {status: "success"}
+        400:
+          body:
+            application/json:
+              example:
+                description: Error message
+                message: Authentication Failure
+  /reset:
+    is:
+      - client-id-required
+    post:
+      description: User credentials has been reset
+      body:
+        application/json:
+          type: custlib.PasswordType
+          examples:
+            input: !include /Examples/passwordExample.raml
+      responses:
+        200:
+          body:
+            application/json:
+              example:
+                description: Success Message
+                message: Password changed successfully
+        400:
+          body:
+            application/json:
+              example:
+                description: Error Message
+                message: Issue in changing password
+  /forgot:
+    is:
+      - client-id-required
+    post:
+      description: Password has been changed for the User
+      body:
+        application/json:
+          type: custlib.PasswordType
+          examples:
+            input: !include /Examples/passwordExample.raml
+      responses:
+        200:
+          body:
+            application/json:
+              example:
+                description: Success Message
+                message: Password changed successfully
+        400:
+          body:
+            application/json:
+              example:
+                description: Error Message
+                message: Issue in changing password
+      

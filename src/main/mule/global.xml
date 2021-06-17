@@ -1,0 +1,118 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<mule xmlns:api-gateway="http://www.mulesoft.org/schema/mule/api-gateway" xmlns:service-now-nre="http://www.mulesoft.org/schema/mule/service-now-nre"
+	xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core"
+	xmlns:http="http://www.mulesoft.org/schema/mule/http" xmlns:validation="http://www.mulesoft.org/schema/mule/validation" xmlns:train-delay-details-sapi="http://www.mulesoft.org/schema/mule/train-delay-details-sapi" xmlns:user-authorisation-sapi="http://www.mulesoft.org/schema/mule/user-authorisation-sapi" xmlns:nationalrailway-servicenow-sapi="http://www.mulesoft.org/schema/mule/nationalrailway-servicenow-sapi" xmlns:national-railway-train-services-api="http://www.mulesoft.org/schema/mule/national-railway-train-services-api" xmlns:json-logger="http://www.mulesoft.org/schema/mule/json-logger" xmlns="http://www.mulesoft.org/schema/mule/core" xmlns:doc="http://www.mulesoft.org/schema/mule/documentation" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+http://www.mulesoft.org/schema/mule/json-logger http://www.mulesoft.org/schema/mule/json-logger/current/mule-json-logger.xsd
+http://www.mulesoft.org/schema/mule/national-railway-train-services-api http://www.mulesoft.org/schema/mule/national-railway-train-services-api/current/mule-national-railway-train-services-api.xsd
+http://www.mulesoft.org/schema/mule/nationalrailway-servicenow-sapi http://www.mulesoft.org/schema/mule/nationalrailway-servicenow-sapi/current/mule-nationalrailway-servicenow-sapi.xsd
+http://www.mulesoft.org/schema/mule/user-authorisation-sapi http://www.mulesoft.org/schema/mule/user-authorisation-sapi/current/mule-user-authorisation-sapi.xsd
+http://www.mulesoft.org/schema/mule/train-delay-details-sapi http://www.mulesoft.org/schema/mule/train-delay-details-sapi/current/mule-train-delay-details-sapi.xsd
+http://www.mulesoft.org/schema/mule/validation http://www.mulesoft.org/schema/mule/validation/current/mule-validation.xsd
+http://www.mulesoft.org/schema/mule/http http://www.mulesoft.org/schema/mule/http/current/mule-http.xsd
+http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd
+http://www.mulesoft.org/schema/mule/service-now-nre http://www.mulesoft.org/schema/mule/service-now-nre/current/mule-service-now-nre.xsd
+http://www.mulesoft.org/schema/mule/api-gateway http://www.mulesoft.org/schema/mule/api-gateway/current/mule-api-gateway.xsd">
+	<json-logger:config name="JSON_Logger_Config" doc:name="JSON Logger Config" doc:id="65b90d12-6dd6-4a64-b530-1c9edb70303e" environment="${mule.env}" />
+	<national-railway-train-services-api:config name="National_Railway_Train_Services_API_Config" doc:name="National Railway Train Services API Config" doc:id="e85cbfe8-07f3-456d-8484-25e841d85f65" property_host="${http.host}" property_port="${user.port}" property_protocol="${http.protocol}" property_basePath="/api" property_responseTimeout="3000000" />
+	<user-authorisation-sapi:config name="User_Authorisation_SAPI_Config" doc:name="User Authorisation SAPI Config" doc:id="4dd9eff3-a9cb-40f8-a27f-742dd13e3664" property_host="${http.host}" property_port="${auth.port}" property_protocol="${http.protocol}" property_basePath="/api" property_responseTimeout="3000000"/>
+	<configuration-properties doc:name="Configuration properties" doc:id="39009a0e-85dd-4151-abc4-f2554ccdacb6" file="config.yaml" />
+	<configuration-properties doc:name="Configuration properties" doc:id="c11b30f6-6842-46aa-9fd4-ef4967e671a9" file="log.properties" />
+	<validation:config name="Validation_Config" doc:name="Validation Config" doc:id="e03270cb-27b0-4902-8f72-296d2d0a9962" />
+	<http:listener-config name="EAPI_HTTP_Listener_config" doc:name="HTTP Listener config" doc:id="11bf95ff-eeca-4258-b023-655e92dd1a4a" >
+		<http:listener-connection host="0.0.0.0" port="${http.port}" />
+	</http:listener-config>
+	<service-now-nre:config name="ServiceNow_NRE_Config" doc:name="ServiceNow-NRE Config" doc:id="d47d2259-689b-4ee5-a94e-0ac4994239c3" property_host="${http.host}" property_port="${serviceNow.port}" property_protocol="${http.protocol}" property_responseTimeout="1000000"/>
+	<api-gateway:autodiscovery apiId="16977655" ignoreBasePath="true" doc:name="API Autodiscovery" doc:id="4b75073e-24a8-4bd7-8cb9-171c917a5d91" flowRef="user-train-delay-eapi-main" />
+	<error-handler name="globalError_Handler" doc:id="743505e6-29ce-4396-8f42-505b616d8ae4" >
+		<on-error-propagate enableNotifications="true" logException="true" doc:name="On Error Propagate" doc:id="f8e098bf-cc81-4c40-b541-891413c41bc1" type="HTTP:BAD_GATEWAY, USER-AUTHORISATION-SAPI:CONNECTIVITY, USER-AUTHORISATION-SAPI:FORBIDDEN, USER-AUTHORISATION-SAPI:INTERNAL_SERVER_ERROR, USER-AUTHORISATION-SAPI:NOT_FOUND, USER-AUTHORISATION-SAPI:RETRY_EXHAUSTED, USER-AUTHORISATION-SAPI:SERVICE_UNAVAILABLE">
+			<try doc:name="Try" doc:id="ddc2644d-1fd1-4a38-a8fa-9796747bdb9b" >
+				<ee:transform doc:name="IncidentPayload" doc:id="b858fcf0-4a64-4709-b1ab-68d188cf79b1">
+				<ee:message>
+					<ee:set-payload><![CDATA[%dw 2.0
+output application/json
+---
+{
+	"short_description": error.detailedDescription,
+	"state": "New",
+	"comments":
+	   "Error Type: " ++ (error.errorType.identifier default '') ++ "\n" 
+	   ++ "Error Location: " ++ (error.failingComponent default ''),
+	"caller_id": "System Administrator"
+}]]></ee:set-payload>
+				</ee:message>
+			</ee:transform>
+				<service-now-nre:create-incident doc:name="Create incident" doc:id="849c5c68-8dd4-470d-9b2f-2295d5f455b7" config-ref="ServiceNow_NRE_Config"/>
+				<raise-error doc:name="APP:SERVER_CONNECTIVITY" doc:id="37c1f63b-c400-4088-95d1-5e6a0409932b" type="APP:SERVER_CONNECTIVITY" description="Gateway issues through, Kindly appreciate your patience"/>
+				<error-handler >
+					<on-error-continue enableNotifications="true" logException="true" doc:name="On Error Continue" doc:id="1680e7d2-811d-4a12-974f-0f90c38f6ed2" type="APP:SERVER_CONNECTIVITY">
+						<ee:transform doc:name="Error Description" doc:id="c1bfacea-65e5-4ff3-aeaa-4f370d66fbca" >
+							<ee:message >
+								<ee:set-payload ><![CDATA[%dw 2.0
+output application/json
+---
+{
+	"Error Description": payload.ErrorDescription,
+	"Incident No": payload.number
+}]]></ee:set-payload>
+							</ee:message>
+						</ee:transform>
+						<json-logger:logger doc:name="Gloabl Incident Error Logger" doc:id="d9eca576-5349-4b78-9103-c9489ff6b8a9" config-ref="JSON_Logger_Config" message="Global EAPI Incident Error Logs" priority="ERROR"/>
+					</on-error-continue>
+				</error-handler>
+			</try>
+		</on-error-propagate>
+		<on-error-propagate enableNotifications="true" logException="true" doc:name="On Error Propagate" doc:id="ada13ee5-6eed-4e61-b45a-0bd6a9a7c0f9" type="HTTP:BAD_GATEWAY, NATIONAL-RAILWAY-TRAIN-SERVICES-API:CONNECTIVITY, NATIONAL-RAILWAY-TRAIN-SERVICES-API:FORBIDDEN, NATIONAL-RAILWAY-TRAIN-SERVICES-API:INTERNAL_SERVER_ERROR, NATIONAL-RAILWAY-TRAIN-SERVICES-API:NOT_FOUND, NATIONAL-RAILWAY-TRAIN-SERVICES-API:RETRY_EXHAUSTED, NATIONAL-RAILWAY-TRAIN-SERVICES-API:SERVICE_UNAVAILABLE, NATIONAL-RAILWAY-TRAIN-SERVICES-API:UNSUPPORTED_MEDIA_TYPE">
+			<try doc:name="Try" doc:id="fd5c0acf-acbe-4c6b-9099-8d6b2c81b202" >
+				<ee:transform doc:name="Incident Payload" doc:id="92580527-bdc4-4792-8e15-991df0aed58b">
+				<ee:message>
+					<ee:set-payload><![CDATA[%dw 2.0
+output application/json
+---
+{
+	"short_description": error.detailedDescription,
+	"state": "New",
+	"comments":
+	   "Error Type: " ++ (error.errorType.identifier default '') ++ "\n" 
+	   ++ "Error Location: " ++ (error.failingComponent default ''),
+	"caller_id": "System Administrator"
+}]]></ee:set-payload>
+				</ee:message>
+			</ee:transform>
+				<service-now-nre:create-incident doc:name="Create incident" doc:id="da744323-ae48-4687-b5b9-877d548adabe" config-ref="ServiceNow_NRE_Config"/>
+				<raise-error doc:name="APP:SERVER_CONNECTIVITY" doc:id="408ea8f1-2079-444c-ada9-33bf85a76039" type="APP:SERVER_CONNECTIVITY" description="Gateway issues through, Kindly appreciate your patience"/>
+				<error-handler >
+					<on-error-continue enableNotifications="true" logException="true" doc:name="On Error Continue" doc:id="8b0ac0cc-3b42-45a4-9ece-b73c1f978196" type="APP:SERVER_CONNECTIVITY">
+						<ee:transform doc:name="Error Payload" doc:id="51e3dc78-afb2-4743-b64c-d535ba8f11d4" >
+							<ee:message >
+								<ee:set-payload ><![CDATA[%dw 2.0
+output application/json
+---
+{
+	"Error Description": payload.ErrorDescription,
+	"Incident No": payload.number
+}]]></ee:set-payload>
+							</ee:message>
+						</ee:transform>
+						<json-logger:logger doc:name="Gloabl Error Handler EAPI NR Logger" doc:id="f06deefd-2ac4-4437-bce5-18f35e9a24d0" config-ref="JSON_Logger_Config" message="Gloabl Error Handler EAPI NR Logger" priority="ERROR"/>
+					</on-error-continue>
+				</error-handler>
+			</try>
+		</on-error-propagate>
+		<on-error-continue enableNotifications="true" logException="true" doc:name="On Error Continue" doc:id="e996e0ea-8c23-483a-b383-d4597cef0c18" type="ANY">
+			<ee:transform doc:name="Error Message" doc:id="e474d590-6b3f-41e5-82cd-8c9ba1f5943c" >
+				<ee:message >
+					<ee:set-payload ><![CDATA[%dw 2.0
+output application/json
+---
+{
+	"Error Type": error.errorType.identifier,
+	"Error Message": error.errorMessage.payload,
+	"Error Description": error.detailedDescription
+}]]></ee:set-payload>
+				</ee:message>
+			</ee:transform>
+			<json-logger:logger doc:name="Global Errort Hanlder Any Logger" doc:id="84f7de05-a6e0-424a-ad0c-9bbdf09c9a43" config-ref="JSON_Logger_Config" message="Global Errort Hanlder Any Logs" priority="ERROR"/>
+		</on-error-continue>
+	</error-handler>
+</mule>

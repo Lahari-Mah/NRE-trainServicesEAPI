@@ -1,0 +1,343 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<mule xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xmlns:munit="http://www.mulesoft.org/schema/mule/munit" xmlns:munit-tools="http://www.mulesoft.org/schema/mule/munit-tools"
+	xmlns="http://www.mulesoft.org/schema/mule/core" xmlns:doc="http://www.mulesoft.org/schema/mule/documentation"
+	xsi:schemaLocation="
+		http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+		http://www.mulesoft.org/schema/mule/munit http://www.mulesoft.org/schema/mule/munit/current/mule-munit.xsd
+		http://www.mulesoft.org/schema/mule/munit-tools  http://www.mulesoft.org/schema/mule/munit-tools/current/mule-munit-tools.xsd">
+	<munit:config name="user-train-delay-implementation-test-suite.xml" />
+	<munit:test name="EAPI-user-RegistrationFlowTest" doc:id="72a43da0-83ec-4e99-a224-d7ccd9703d4e" description="Test" timeOut="12000000">
+		<munit:behavior >
+			<munit-tools:mock-when doc:name="Mock when-UserAuth" doc:id="395b4fa0-bd75-4ad9-915d-eb51f5341d81" processor="user-authorisation-sapi:create-create">
+				<munit-tools:with-attributes >
+					<munit-tools:with-attribute whereValue="db825b40-9c62-4397-bc97-e8bc0ea498b9" attributeName="doc:id" />
+				</munit-tools:with-attributes>
+				<munit-tools:then-return >
+					<munit-tools:payload value='#[&#10;output application/json&#10;---&#10;{&#10;  "firstName": "UserE2",&#10;  "lastName": "UserE2Last",&#10;  "emailId": "UserE2@gmail.com",&#10;  "phoneNo": "8765402599",&#10;  "password": "12345678!20",&#10;  "recoveryQuestion": "Mothers maiden name",&#10;  "recoveryAnswer": "Jalladi"&#10;}&#10;]' mediaType="application/json" />
+					<munit-tools:variables >
+						<munit-tools:variable key="authPayload" value="#[ output application/json --- {id: '123'}  ]" mediaType="application/json" />
+					</munit-tools:variables>
+				</munit-tools:then-return>
+			</munit-tools:mock-when>
+			<munit-tools:mock-when doc:name="Mock when-CustDBReg" doc:id="66ae2453-94b7-454e-b99e-d8961778b38b" processor="national-railway-train-services-api:create-customer">
+				<munit-tools:with-attributes >
+					<munit-tools:with-attribute whereValue="728b494b-8a55-4286-9f2a-ec1bdea8afcf" attributeName="doc:id" />
+				</munit-tools:with-attributes>
+				<munit-tools:then-return >
+					<munit-tools:payload value='#[&#10;output application/json&#10;---&#10;{&#10;"Message": "Successfully Inserted"&#10;}&#10;]' />
+				</munit-tools:then-return>
+			</munit-tools:mock-when>
+		</munit:behavior>
+		<munit:execution >
+			<flow-ref doc:name="EAPI-CustomerReg-setEvent" doc:id="e03b3cca-0942-472e-9e0f-f4a62d7359e8" name="EAPI-CustomerReg-setEvent"/>
+			<flow-ref doc:name="Flow-ref to user-RegistrationFlow" doc:id="be4f4c81-631c-4ccd-8361-c45683fb4819" name="user-RegistrationFlow"/>
+		</munit:execution>
+		<munit:validation >
+			<munit-tools:assert-that doc:name="NotNull" doc:id="400d5468-ecba-4e1d-824b-e737869e7f25" expression="#[payload]" is="#[MunitTools::notNullValue()]" message="Payload is empty"/>
+		</munit:validation>
+	</munit:test>
+	<flow name="EAPI-CustomerReg-setEvent" doc:id="bb1b7704-18f7-472f-80fb-80bd31eb3ddb" >
+		<munit:set-event doc:name="CustRego" doc:id="8b3b36a0-fd9f-47c4-8345-9e6b070c7807" >
+			<munit:payload value='#[&#10;output application/json&#10;---&#10;{&#10;  "firstName": "UserE2",&#10;  "lastName": "UserE2Last",&#10;  "emailId": "UserE2@gmail.com",&#10;  "phoneNo": "8765402599",&#10;  "password": "12345678!20",&#10;  "recoveryQuestion": "Mothers maiden name",&#10;  "recoveryAnswer": "Jalladi"&#10;}&#10;]' />
+		</munit:set-event>
+	</flow>
+	<munit:test name="EAPI-LoginFailure-AuthenticationFlowTest" doc:id="8061ad56-1bbb-4d9b-a6d3-a7fffe175e62" description="Test" timeOut="120000" expectedErrorType="ANY" expectedErrorDescription="Failure in Capturing details">
+		<munit:behavior >
+			<munit-tools:mock-when doc:name="Mock when-AuthUser" doc:id="b41c05e0-dae2-4193-a986-af6ee69be7b0" processor="user-authorisation-sapi:create-auth">
+				<munit-tools:with-attributes >
+					<munit-tools:with-attribute whereValue="ca2169e5-41f3-403b-a00d-24e084e2f227" attributeName="doc:id" />
+				</munit-tools:with-attributes>
+				<munit-tools:then-return >
+					<munit-tools:payload value='#[&#10;output application/json&#10;---&#10;{&#10;"emailId": "abcd@gmail.com",&#10;"password": "test"&#10;}&#10;]' />
+				</munit-tools:then-return>
+			</munit-tools:mock-when>
+		</munit:behavior>
+		<munit:execution >
+			<flow-ref doc:name="EAPI-CustomerReg-setEvent" doc:id="5e0e91a5-9c2f-41c4-9c35-44230ab837eb" name="EAPI-CustomerReg-setEvent"/>
+			<flow-ref doc:name="Flow-ref to user-train-delay-AuthenticationFlow" doc:id="d3f6a3ce-50cf-4f58-a565-02edf0ad3e52" name="user-train-delay-AuthenticationFlow"/>
+		</munit:execution>
+		<munit:validation >
+			<munit-tools:assert-that doc:name="notNull" doc:id="63d06eb5-9540-4172-804c-8133bf1d0d47" message="#['Not as expected']" expression="#[payload]" is="#[MunitTools::notNullValue()]"/>
+		</munit:validation>
+	</munit:test>
+	<munit:test name="user-Success-AuthenticationFlowTest" doc:id="fa5304ef-9e86-4a59-838d-dbd05744fb2f" description="Test">
+		<munit:behavior >
+			<munit-tools:mock-when doc:name="Mock when-authLogin" doc:id="2691bc34-a098-40b1-9c2f-d2992b71b321" processor="user-authorisation-sapi:create-auth">
+				<munit-tools:with-attributes >
+					<munit-tools:with-attribute whereValue="ca2169e5-41f3-403b-a00d-24e084e2f227" attributeName="doc:id" />
+				</munit-tools:with-attributes>
+				<munit-tools:then-return >
+					<munit-tools:payload value='#[&#10;output application/json&#10;---&#10;{&#10;"Message": "Authenticated"&#10;}&#10;]' />
+					<munit-tools:variables >
+						<munit-tools:variable key="authPayload" value="#[output application/json --- {userid: '123'}]" mediaType="application/json" />
+					</munit-tools:variables>
+				</munit-tools:then-return>
+			</munit-tools:mock-when>
+		</munit:behavior>
+		<munit:execution >
+			<flow-ref doc:name="EAPI-userAuth-setEvent" doc:id="7e74d9e9-07a8-454e-9c8d-7f9051f31847" name="EAPI-userAuth-setEvent"/>
+			<flow-ref doc:name="Flow-ref to user-train-delay-AuthenticationFlow" doc:id="33085428-9f6d-4793-ba19-48b77269ec1d" name="user-train-delay-AuthenticationFlow"/>
+		</munit:execution>
+		<munit:validation >
+			<munit-tools:assert-that doc:name="NotNullCheck" doc:id="cc3ac0db-b98b-43dc-b6e8-c12a979f45bc" message="#['Payload is Null']" expression="#[payload]" is="#[MunitTools::notNullValue()]"/>
+		</munit:validation>
+	</munit:test>
+	<flow name="EAPI-userAuth-setEvent" doc:id="97fb9bfa-18d3-43ad-9a08-724dd70a4fca" >
+		<munit:set-event doc:name="auth-User" doc:id="13324993-3ad6-4bab-aa4e-709d9d38b3c6" >
+			<munit:payload value='#[&#10;output application/json&#10;---&#10;{&#10;  "emailId": "NewUser1@gmail.com",&#10;  "password": "12345678!20"&#10; }&#10;]' />
+		</munit:set-event>
+	</flow>
+	<munit:test name="EAPI-userUpdate-DetailsFlowTest" doc:id="023be705-dc9c-40b7-a998-555a5ce5ff6f" description="Test" timeOut="120000">
+		<munit:behavior >
+			<munit-tools:mock-when doc:name="Mock when-custUpdate" doc:id="2cfde18b-6aed-4b44-b3d3-a555e318f6bb" processor="user-authorisation-sapi:create-update">
+				<munit-tools:with-attributes >
+					<munit-tools:with-attribute whereValue="cd94e4c9-6cd8-4865-a43b-55bc2bec2997" attributeName="doc:id" />
+				</munit-tools:with-attributes>
+				<munit-tools:then-return >
+					<munit-tools:payload value='#[&#10;output application/json&#10;---&#10;{&#10;"phoneNo": "8765432190"&#10;}&#10;]' />
+					<munit-tools:variables >
+						<munit-tools:variable key="authPayload" value="#[output application/json --- {userid: '123'}]" mediaType="application/json" />
+						<munit-tools:variable key="custId" value="#['123']" mediaType="application/json" />
+					</munit-tools:variables>
+				</munit-tools:then-return>
+			</munit-tools:mock-when>
+			<munit-tools:mock-when doc:name="Mock when-custDBUpdate" doc:id="29cdb511-a832-4ccd-93eb-6ccbe0a1ef3c" processor="national-railway-train-services-api:update-customer-by-id">
+				<munit-tools:with-attributes >
+					<munit-tools:with-attribute whereValue="cbb560d9-2a65-41de-8785-6950ca2d34ce" attributeName="doc:id" />
+				</munit-tools:with-attributes>
+				<munit-tools:then-return >
+					<munit-tools:payload value='#[&#10;output application/json&#10;---&#10;{&#10;"Message": "Updated Successfully"&#10;}&#10;]' />
+				</munit-tools:then-return>
+			</munit-tools:mock-when>
+		</munit:behavior>
+		<munit:execution >
+			<flow-ref doc:name="EAPI-CustomerReg-setEvent" doc:id="22b52c3a-10e7-4a8a-b14f-fb6b9c1784df" name="EAPI-CustomerReg-setEvent"/>
+			<flow-ref doc:name="Flow-ref to user-Update-DetailsFlow" doc:id="cda1f9ef-e20a-4fad-b8d9-75495a334519" name="user-Update-DetailsFlow"/>
+		</munit:execution>
+		<munit:validation >
+			<munit-tools:assert-that doc:name="NotNull" doc:id="175aa3d4-71af-40a8-970f-339051e72c43" message="Payload is Null" expression="#[payload]" is="#[MunitTools::notNullValue()]"/>
+		</munit:validation>
+	</munit:test>
+	<munit:test name="EAPI-user-SubscriptionRegistrationFlowTest" doc:id="5d8bdbd3-f2de-415e-afaa-83aef1bc15f0" description="Test" timeOut="120000">
+		<munit:behavior >
+			<munit-tools:mock-when doc:name="Mock when-Subscription" doc:id="1754535b-131b-4c83-a3a2-f8840389a4b6" processor="national-railway-train-services-api:create-subscription-by-id">
+				<munit-tools:with-attributes >
+					<munit-tools:with-attribute whereValue="07d52029-3862-4cd1-988c-0f3b258edcd2" attributeName="doc:id" />
+				</munit-tools:with-attributes>
+				<munit-tools:then-return >
+					<munit-tools:payload value='#[&#10;output application/json&#10;---&#10;{&#10;"Message": "Subscribed Successfully"&#10;}&#10;]' />
+				</munit-tools:then-return>
+			</munit-tools:mock-when>
+		</munit:behavior>
+		<munit:execution >
+			<flow-ref doc:name="EAPI-user-Subscription-setEvent" doc:id="bde981d0-4e26-482e-b27e-236d63b923c8" name="EAPI-user-Subscription-setEvent"/>
+			<flow-ref doc:name="Flow-ref to user-SubscriptionRegistrationFlow" doc:id="b336d9da-f1d7-4f5f-98cf-51b0a0d233d8" name="user-SubscriptionRegistrationFlow"/>
+		</munit:execution>
+		<munit:validation >
+			<munit-tools:assert-equals doc:name="MessageEquals" doc:id="5a36b9f0-91b3-4c07-89ae-49957aad733b" actual="#[payload.Message]" expected="#['Subscribed Successfully']" message="#['Expected Result']"/>
+		</munit:validation>
+	</munit:test>
+	<flow name="EAPI-user-Subscription-setEvent" doc:id="9cb5fd43-2aea-48e8-8073-6ffccd7d61a9" >
+		<munit:set-event doc:name="Set Event-Subscription" doc:id="7beed47e-a78c-471a-8393-064c7423620f" >
+			<munit:payload value='#[&#10;output application/json&#10;---&#10;[{&#10;    "fromTime": "07:40:00",&#10;    "fromStation": "LBG",&#10;    "toStation": "CST",&#10;    "toTime": "08:40:00",&#10;    "journeyDate": "2021-06-06"&#10; },&#10; {&#10;    "fromTime": "08:50:00",&#10;    "fromStation": "BCE",&#10;    "toStation": "RDG",&#10;    "toTime": "09:50:00",&#10;    "journeyDate": "2021-06-06",&#10;    "advanceNotifyTime": 60,&#10;    "alertService": "Yes"&#10; }]&#10;]' mediaType="application/json" />
+			<munit:variables >
+				<munit:variable key="custId" value="#['1']" mediaType="application/json" />
+				<munit:variable key="subsId" value="#['3']" mediaType="application/json" />
+			</munit:variables>
+		</munit:set-event>
+	</flow>
+	<munit:test name="EAPI-user-SubscriptionUpdateFlowTest" doc:id="03916aa7-27e7-4469-8c11-b9528ba59333" description="Test" timeOut="120000">
+		<munit:behavior >
+			<munit-tools:mock-when doc:name="SubscriptionUpdate" doc:id="68d1615d-a83f-412e-a20e-5dca7fb4a731" processor="national-railway-train-services-api:update-subscription-by-id-subscription-id">
+				<munit-tools:with-attributes >
+					<munit-tools:with-attribute whereValue="21898b0d-b2aa-4ab9-9eaf-471cfa9cf0e2" attributeName="doc:id" />
+				</munit-tools:with-attributes>
+				<munit-tools:then-return >
+					<munit-tools:payload value='#[&#10;output application/json&#10;---&#10;{&#10;"Message": "Subscribed Successfully"&#10;}&#10;]' />
+				</munit-tools:then-return>
+			</munit-tools:mock-when>
+		</munit:behavior>
+		<munit:execution >
+			<flow-ref doc:name="EAPI-user-Subscription-setEvent" doc:id="c454783b-927e-4f15-8b15-d56cdb762c9b" name="EAPI-user-Subscription-setEvent"/>
+			<flow-ref doc:name="Flow-ref to user-SubscriptionUpdateFlow" doc:id="53eb186f-0d30-4b1e-89d6-405f544bfe7c" name="user-SubscriptionUpdateFlow"/>
+		</munit:execution>
+		<munit:validation >
+			<munit-tools:assert-that doc:name="NotNull" doc:id="9032d5fa-867a-4d35-8cbd-06d0dcddecb9" expression="#[payload]" is="#[MunitTools::notNullValue()]" message="#['paylaod is null']"/>
+		</munit:validation>
+	</munit:test>
+	<munit:test name="user-GetCustomerDetailsFlowTest" doc:id="6368ba34-a4e0-4ca0-bd6d-bf424277ba4c" description="Test" timeOut="120000">
+		<munit:behavior >
+			<munit-tools:mock-when doc:name="allCustomerDetails" doc:id="420010a8-cae4-432d-b327-b8191e928649" processor="national-railway-train-services-api:get-customers">
+				<munit-tools:with-attributes >
+					<munit-tools:with-attribute whereValue="d1b73882-1a3a-4217-b2a8-3fce2b3db307" attributeName="doc:id" />
+				</munit-tools:with-attributes>
+				<munit-tools:then-return >
+					<munit-tools:payload value='#[&#10;output application/json&#10;---&#10;"Customer Data"&#10;]' mediaType="application/json" />
+				</munit-tools:then-return>
+			</munit-tools:mock-when>
+		</munit:behavior>
+		<munit:execution >
+			<flow-ref doc:name="Flow-ref to user-GetCustomerDetailsFlow" doc:id="0538c933-ab9c-4ebd-98c1-5d8025e85070" name="user-GetCustomerDetailsFlow"/>
+		</munit:execution>
+		<munit:validation >
+			<munit-tools:assert-that doc:name="notNull" doc:id="588620b8-9f00-4f3b-b376-8acb23a172d0" message="#['Not the Expected result']" is="#[MunitTools::both(MunitTools::notNullValue(),MunitTools::withMediaType('application/json'))]" expression="#[payload]"/>
+		</munit:validation>
+	</munit:test>
+	<munit:test name="user-GetCustomerByIDFlowTest" doc:id="3a4a06f3-37b9-46eb-a9d3-f86a698a3e98" description="Test" timeOut="120000">
+		<munit:behavior >
+			<munit-tools:mock-when doc:name="Mock when-AuthFlow" doc:id="4c635c2d-e19c-4ddb-b44d-2ea02a189265" processor="flow-ref">
+				<munit-tools:with-attributes >
+					<munit-tools:with-attribute whereValue="d86d4ddf-c6ba-4847-9b13-8faa5bfe8985" attributeName="doc:id" />
+				</munit-tools:with-attributes>
+				<munit-tools:then-return >
+					<munit-tools:payload value='#[&#10;output application/json&#10;---&#10;{&#10;"Message": "Authenticated"&#10;}&#10;]' />
+					<munit-tools:variables >
+						<munit-tools:variable key="authPayload" value="#[output application/json --- {userid: '123'}]" mediaType="application/json" />
+					</munit-tools:variables>
+				</munit-tools:then-return>
+			</munit-tools:mock-when>
+			<munit-tools:mock-when doc:name="customerDb" doc:id="86b50fb2-c872-425b-b694-83bc027d393d" processor="national-railway-train-services-api:get-customer-by-id">
+				<munit-tools:with-attributes >
+					<munit-tools:with-attribute whereValue="b59ecee6-4b69-4b33-993c-c0957af69d42" attributeName="doc:id" />
+				</munit-tools:with-attributes>
+				<munit-tools:then-return >
+					<munit-tools:payload value='#[&#10;output application/json&#10;---&#10;"Data"&#10;]' />
+				</munit-tools:then-return>
+			</munit-tools:mock-when>
+		</munit:behavior>
+		<munit:execution >
+			<flow-ref doc:name="EAPI-getCustomer-setEventFlow" doc:id="05f4246a-7c7b-4e15-ac8f-6e8fb9459625" name="EAPI-variables-setEventFlow"/>
+			<flow-ref doc:name="Flow-ref to user-GetCustomerByIDFlow" doc:id="c9f6421c-ecff-4299-85a0-924516db0b7b" name="user-GetCustomerByIDFlow"/>
+		</munit:execution>
+		<munit:validation >
+			<munit-tools:assert-that doc:name="payloadNotNull" doc:id="872018e7-f86a-4f09-95b3-908cd006d37d" message="#['Not expected']" expression="#[payload]" is="#[MunitTools::notNullValue()]"/>
+		</munit:validation>
+	</munit:test>
+	<flow name="EAPI-variables-setEventFlow" doc:id="7955ab95-dc20-4616-8141-2d45138a7ce4" >
+		<munit:set-event doc:name="variables" doc:id="4bac8637-e816-4b4c-81d5-8fee0d2bbf67" >
+			<munit:attributes value="#[&#10;{&#10;uriParams : &#10;{&#10;'id' : 123,&#10;'subscriptionId' : 2,&#10;'alertId' : 9&#10;},&#10;headers: {&#10; authorization: &quot;Basic MzAwMDAwMDAzOjExMTE=&quot;&#10;}&#10;}]" />
+		</munit:set-event>
+	</flow>
+	<munit:test name="user-GetSubscriptionFlowTest" doc:id="cb6c5c59-50cf-42dc-bc1b-c2f6caa227a2" description="Test" timeOut="120000">
+		<munit:behavior >
+			<munit-tools:mock-when doc:name="subscriptionDB" doc:id="4e5c6b38-e181-474a-b950-788bd3c23c94" processor="national-railway-train-services-api:get-subscriptions-by-id">
+				<munit-tools:with-attributes >
+					<munit-tools:with-attribute whereValue="ccf31a7f-1ef4-458a-9f83-7be3deb07d6c" attributeName="doc:id" />
+				</munit-tools:with-attributes>
+				<munit-tools:then-return >
+					<munit-tools:payload value='#[&#10;output application/json&#10;---&#10;"Subscribed"&#10;]' mediaType="application/json" />
+				</munit-tools:then-return>
+			</munit-tools:mock-when>
+		</munit:behavior>
+		<munit:execution >
+			<flow-ref doc:name="EAPI-variables-setEventFlow" doc:id="2d8d7e64-4a6a-4911-aa73-0d7b52e0ed13" name="EAPI-variables-setEventFlow"/>
+			<flow-ref doc:name="Flow-ref to user-GetSubscriptionFlow" doc:id="f90c6a2d-59c0-409a-8058-70be23fee18a" name="user-GetSubscriptionFlow"/>
+		</munit:execution>
+		<munit:validation >
+			<munit-tools:assert-that doc:name="NotNull" doc:id="ed998380-4d38-40d2-9019-4dc33e364aaa" message="#['Not Expected']" expression="#[payload]" is="#[MunitTools::notNullValue()]"/>
+		</munit:validation>
+	</munit:test>
+	<munit:test name="user-GetSubscriptionByIDFlowTest" doc:id="a2211819-fc0a-43a5-81ab-339c0fd42fb0" description="Test" timeOut="120000">
+		<munit:behavior >
+			<munit-tools:mock-when doc:name="Mock when" doc:id="d500b1ee-1908-4d96-bc2b-bd85a641e4dc" processor="national-railway-train-services-api:get-subscription-by-id-subscription-id">
+				<munit-tools:with-attributes >
+					<munit-tools:with-attribute whereValue="c1492d41-9e9c-4590-a489-4e6606460ef5" attributeName="doc:id" />
+				</munit-tools:with-attributes>
+				<munit-tools:then-return >
+					<munit-tools:payload value='#[&#10;output application/json&#10;---&#10;"Subscription Id"&#10;]' />
+				</munit-tools:then-return>
+			</munit-tools:mock-when>
+		</munit:behavior>
+		<munit:execution >
+			<flow-ref doc:name="EAPI-variables-setEventFlow" doc:id="32436e8b-0e40-4cff-8ffe-a7461611fc11" name="EAPI-variables-setEventFlow"/>
+			<flow-ref doc:name="Flow-ref to user-GetSubscriptionByIDFlow" doc:id="7d6ff102-8530-4fcf-b8e6-69e486e47a1b" name="user-GetSubscriptionByIDFlow"/>
+		</munit:execution>
+		<munit:validation >
+			<munit-tools:assert-that doc:name="notNull" doc:id="4aa50719-371a-4fbc-bdf9-c4fbe36e0def" message="#['Not expected']" expression="#[payload]" is="#[MunitTools::notNullValue()]"/>
+		</munit:validation>
+	</munit:test>
+	<munit:test name="user-GetAlertsFlowTest" doc:id="68610ee5-0b72-49ae-9315-d5692552bb3b" description="Test" timeOut="120000">
+		<munit:behavior >
+			<munit-tools:mock-when doc:name="Alerts" doc:id="79074c35-a240-452f-a96e-8c5a8fd963ff" processor="national-railway-train-services-api:get-alerts-by-id-subscription-id">
+				<munit-tools:with-attributes >
+					<munit-tools:with-attribute whereValue="ec6b2b64-eccc-4c02-8e80-e4c30bf6caad" attributeName="doc:id" />
+				</munit-tools:with-attributes>
+				<munit-tools:then-return >
+					<munit-tools:payload value='#[&#10;output application/json&#10;---&#10;"Alerts Data"&#10;]' mediaType="application/json" />
+				</munit-tools:then-return>
+			</munit-tools:mock-when>
+		</munit:behavior>
+		<munit:execution >
+			<flow-ref doc:name="EAPI-variables-setEventFlow" doc:id="39ae960e-0793-4947-9ef7-501a8d55fbf3" name="EAPI-variables-setEventFlow"/>
+			<flow-ref doc:name="Flow-ref to user-GetAlertsFlow" doc:id="7262f724-199e-4167-85a7-b985e82ed975" name="user-GetAlertsFlow"/>
+		</munit:execution>
+		<munit:validation >
+			<munit-tools:assert-that doc:name="NotNull" doc:id="0fde6038-7f5e-4dcd-b69e-d8cb8a56bbbc" message="#['Not Expected']" expression="#[payload]" is="#[MunitTools::notNullValue()]"/>
+		</munit:validation>
+	</munit:test>
+	<munit:test name="user-train-delay-implementation-test-suite-user-GetAlertDetails-ByIDFlowTest" doc:id="02e959fa-7a89-4459-8cc3-bbdc9798b9d4" description="Test">
+		<munit:behavior >
+			<munit-tools:mock-when doc:name="AlertsId" doc:id="a52e2fe6-43f2-4aaf-9e16-63ddc5265643" processor="national-railway-train-services-api:get-alert-by-id-subscription-id-alert-id">
+				<munit-tools:with-attributes >
+					<munit-tools:with-attribute whereValue="ade28902-65f1-44f3-832f-f8447e4d8452" attributeName="doc:id" />
+				</munit-tools:with-attributes>
+				<munit-tools:then-return >
+					<munit-tools:payload value='#[&#10;output application/json&#10;---&#10;"Alerts Id"&#10;]' mediaType="application/json" />
+				</munit-tools:then-return>
+			</munit-tools:mock-when>
+		</munit:behavior>
+		<munit:execution >
+			<flow-ref doc:name="EAPI-variables-setEventFlow" doc:id="1cbed3ba-66e8-4728-bf42-6d493e2dea23" name="EAPI-variables-setEventFlow"/>
+			<flow-ref doc:name="Flow-ref to user-GetAlertDetails-ByIDFlow" doc:id="a558d264-31f9-4f76-a965-6544feb86b55" name="user-GetAlertDetails-ByIDFlow"/>
+		</munit:execution>
+		<munit:validation >
+			<munit-tools:assert-that doc:name="NotNull" doc:id="06a5e530-6065-49d4-bdb8-e82c2556346e" message="#['Not as Expected']" expression="#[payload]" is="#[MunitTools::notNullValue()]"/>
+		</munit:validation>
+	</munit:test>
+	<munit:test name="user-PasswordResetFlowTest" doc:id="93570a5b-fb1d-475f-8a01-cd99239de77d" description="Test">
+		<munit:behavior >
+			<munit-tools:mock-when doc:name="reset" doc:id="85bda3b2-42cd-4e90-b05e-ee68c222963c" processor="user-authorisation-sapi:create-reset">
+				<munit-tools:with-attributes >
+					<munit-tools:with-attribute whereValue="8562f7ed-3a5d-4d1f-9ae6-f12fc0e8a131" attributeName="doc:id" />
+				</munit-tools:with-attributes>
+				<munit-tools:then-return >
+					<munit-tools:payload value='#[&#10;output application/json&#10;---&#10;"Reset done"&#10;]' mediaType="application/json" />
+				</munit-tools:then-return>
+			</munit-tools:mock-when>
+		</munit:behavior>
+		<munit:execution >
+			<flow-ref doc:name="EAPI-userPassword-setEvent" doc:id="da8fa061-0434-4f4c-8eff-f8a3ebc8dc2c" name="EAPI-userPassword-setEvent"/>
+			<flow-ref doc:name="Flow-ref to user-PasswordResetFlow" doc:id="63175e49-91f2-4568-bacb-79f38bd70ef7" name="user-PasswordResetFlow"/>
+		</munit:execution>
+		<munit:validation >
+			<munit-tools:assert-that doc:name="notNull" doc:id="2868125a-5ad7-49e3-9832-6ffa1ec0cefa" message="#['Not as expected']" expression="#[payload]" is="#[MunitTools::notNullValue()]"/>
+		</munit:validation>
+	</munit:test>
+	<flow name="EAPI-userPassword-setEvent" doc:id="335dd47e-2769-475b-81b4-5bad5d938359" >
+		<munit:set-event doc:name="passwordPayload" doc:id="ea13ca9a-7a96-4405-a0c0-7b4e83b0358a" >
+			<munit:payload value='#[&#10;output application/json&#10;---&#10;{&#10;"emailId": "abcd@gmail.com",&#10;"password": "123"&#10;}&#10;]' />
+		</munit:set-event>
+	</flow>
+	<munit:test name="user-train-delay-implementation-test-suite-user-ForgetPasswordFlowTest" doc:id="c64fc656-1d3b-442c-a543-4d0cb7dbcc48" description="Test">
+		<munit:behavior >
+			<munit-tools:mock-when doc:name="forgot" doc:id="6c87b6df-a2bd-49e1-8403-9ea83c57d61c" processor="user-authorisation-sapi:create-forgot">
+				<munit-tools:with-attributes >
+					<munit-tools:with-attribute whereValue="709d6603-5659-40fb-b8d3-8ea038b67c5c" attributeName="doc:id" />
+				</munit-tools:with-attributes>
+				<munit-tools:then-return >
+					<munit-tools:payload value='#[&#10;output application/json&#10;---&#10;"Password been changed"&#10;]' mediaType="application/json" />
+				</munit-tools:then-return>
+			</munit-tools:mock-when>
+		</munit:behavior>
+		<munit:execution >
+			<flow-ref doc:name="EAPI-userPassword-setEvent" doc:id="f32dd8dd-a613-4b5f-83fd-96c45c5aee43" name="EAPI-userPassword-setEvent"/>
+			<flow-ref doc:name="Flow-ref to user-ForgetPasswordFlow" doc:id="13c116d0-7d72-41e8-86f6-0494d784d3ed" name="user-ForgetPasswordFlow"/>
+		</munit:execution>
+		<munit:validation >
+			<munit-tools:assert-that doc:name="notNull" doc:id="43f46fc5-4a2c-4761-a52d-06c7e82e9a7a" message="#['Not as Expected']" expression="#[payload]" is="#[MunitTools::notNullValue()]"/>
+		</munit:validation>
+	</munit:test>
+
+</mule>

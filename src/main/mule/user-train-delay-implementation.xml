@@ -1,0 +1,970 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<mule xmlns:validation="http://www.mulesoft.org/schema/mule/validation" xmlns:user-authorisation-sapi="http://www.mulesoft.org/schema/mule/user-authorisation-sapi"
+	xmlns:national-railway-train-services-api="http://www.mulesoft.org/schema/mule/national-railway-train-services-api"
+	xmlns:json-logger="http://www.mulesoft.org/schema/mule/json-logger" xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core" xmlns="http://www.mulesoft.org/schema/mule/core" xmlns:doc="http://www.mulesoft.org/schema/mule/documentation" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd
+http://www.mulesoft.org/schema/mule/json-logger http://www.mulesoft.org/schema/mule/json-logger/current/mule-json-logger.xsd
+http://www.mulesoft.org/schema/mule/national-railway-train-services-api http://www.mulesoft.org/schema/mule/national-railway-train-services-api/current/mule-national-railway-train-services-api.xsd
+http://www.mulesoft.org/schema/mule/user-authorisation-sapi http://www.mulesoft.org/schema/mule/user-authorisation-sapi/current/mule-user-authorisation-sapi.xsd
+http://www.mulesoft.org/schema/mule/validation http://www.mulesoft.org/schema/mule/validation/current/mule-validation.xsd">
+	<flow name="user-RegistrationFlow" doc:id="177a7901-f80f-4e47-b70d-4b4a13ec976e" >
+		<json-logger:logger doc:name="UserRegistration_StartLogger" doc:id="ae5d9f04-164c-4ec7-98d1-aba9e980a45a" message="UserRegistration Start Logs" config-ref="JSON_Logger_Config"/>
+		<ee:transform doc:name="PayloadJson" doc:id="e990f63a-b25e-4807-9ff1-e097c533d560" >
+			<ee:message >
+				<ee:set-payload ><![CDATA[%dw 2.0
+output application/json
+---
+payload]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+		<validation:is-not-null doc:name="NotNullCheck_OnPayload" doc:id="6dc05a20-3bce-472f-b74c-b67d05538fea" config-ref="Validation_Config" value="#[payload != null and (payload.firstName != null and payload.lastName != null and payload.emailId != null and payload.phoneNo !=null and payload.password != null)]" message="Please provide all required field values"/>
+		<try doc:name="Try" doc:id="dc0ca8bc-f1c5-4ce8-ae49-f934a72a83b4" >
+			<user-authorisation-sapi:create-create doc:name="User Auth Registration " doc:id="db825b40-9c62-4397-bc97-e8bc0ea498b9" config-ref="User_Authorisation_SAPI_Config" target="authPayload" client-id="0oaq5q0yiyF3BQEkQ5d6" client-secret="ZvV0zILKHMZHCJHZPJevm8FzCKYZL-hwZCwACQlR"/>
+			<error-handler >
+				<on-error-continue enableNotifications="true" logException="true" doc:name="On Error Continue" doc:id="70b07521-a65a-45b6-b9ff-20cbc00bc7a0" type="USER-AUTHORISATION-SAPI:BAD_REQUEST, USER-AUTHORISATION-SAPI:METHOD_NOT_ALLOWED, USER-AUTHORISATION-SAPI:NOT_ACCEPTABLE, USER-AUTHORISATION-SAPI:PARSING, USER-AUTHORISATION-SAPI:SECURITY, USER-AUTHORISATION-SAPI:TIMEOUT, USER-AUTHORISATION-SAPI:TOO_MANY_REQUESTS, USER-AUTHORISATION-SAPI:UNAUTHORIZED, USER-AUTHORISATION-SAPI:UNSUPPORTED_MEDIA_TYPE, EXPRESSION, STREAM_MAXIMUM_SIZE_EXCEEDED">
+					<ee:transform doc:name="Error Message" doc:id="9e8b4936-47a2-49c6-94e7-967def4f0695" >
+						<ee:message >
+							<ee:set-payload ><![CDATA[%dw 2.0
+output application/json
+---
+{
+	"Error Type": error.errorType.identifier,
+	"Error Message": error.errorMessage.payload,
+	"Error Description": error.detailedDescription
+}]]></ee:set-payload>
+						</ee:message>
+					</ee:transform>
+					<json-logger:logger doc:name="user-Registration_ErrorLogger" doc:id="93eb717d-0b18-4ac4-98c5-a45c8295c421" config-ref="JSON_Logger_Config" message="User Registration ErrorLogs" priority="ERROR"/>
+				</on-error-continue>
+			</error-handler>
+		</try>
+		<choice doc:name="Choice" doc:id="c4e9f12e-c15f-4f0a-9e9f-bd54ba29f8a1" >
+			<when expression="#[vars.authPayload != null and vars.authPayload.'id' != null]">
+				<flow-ref doc:name="user-dbRegoFlow" doc:id="b286043c-afe5-41f5-8bf3-33eb64af6a59" name="user-dbRegoFlow"/>
+			</when>
+			<otherwise >
+				<flow-ref doc:name="user-train-delay-RaiseErrorFlow" doc:id="10f3518e-3784-443a-bb0f-186a6a1e9ae4" name="user-train-delay-RaiseErrorFlow"/>
+			</otherwise>
+		</choice>
+		<ee:transform doc:name="Final Payload" doc:id="b4bcb2a3-5c59-4194-b928-230d66000cba" >
+			<ee:message >
+				<ee:set-payload ><![CDATA[%dw 2.0
+output application/json
+---
+{
+	"Message": "Customer Registered Successfully",
+	"UserID": vars.authPayload.'id'
+}]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+		<json-logger:logger doc:name="UserRegistration_EndLogger" doc:id="9ff2b004-7ebe-4e85-9076-2cec46293075" config-ref="JSON_Logger_Config" message="UserRegistration EndLogs" tracePoint="END"/>
+		<error-handler >
+			<on-error-propagate enableNotifications="true" logException="true" doc:name="On Error Propagate" doc:id="6193aaf4-e5ca-4ecd-a758-33671444ac89" type="ANY">
+				<ee:transform doc:name="Error Message" doc:id="e7a562e3-b140-4f61-8978-e979bd4a2d69">
+					<ee:message>
+						<ee:set-payload><![CDATA[%dw 2.0
+output application/json
+---
+if(vars.authPayload != null)
+{
+	"Error Payload": vars.authPayload	
+}
+else{
+	"Error Type": error.errorType.identifier,
+	"Error Message": error.errorMessage.payload,
+	"Error Description": error.detailedDescription
+}]]></ee:set-payload>
+					</ee:message>
+				</ee:transform>
+				<json-logger:logger doc:name="IsNotNull_ErrorLogger" doc:id="47f24a29-5a8c-498c-914f-d3e295a24219" config-ref="JSON_Logger_Config" message="Not Null Error Logs" priority="ERROR" />
+			</on-error-propagate>
+		</error-handler>
+	</flow>
+	<flow name="user-dbRegoFlow" doc:id="7362227a-684c-478b-a550-e9fdf2db7c6d" >
+		<json-logger:logger doc:name="User-DBRego_StartLogger" doc:id="edbe42f1-7553-4f1e-b3ce-903a158309f2" config-ref="JSON_Logger_Config" message="User DBRegistration StartLogs"/>
+		<ee:transform doc:name="PayloadToCustomerDB" doc:id="df6d1228-8714-4548-895f-13c20d244282" >
+			<ee:message >
+				<ee:set-payload ><![CDATA[%dw 2.0
+output application/json
+---
+{
+	"firstName": payload.firstName,
+	"lastName": payload.lastName,
+	"emailId": payload.emailId,
+	"phoneNo": payload.phoneNo,
+	"customerId": vars.authPayload.'id'
+}]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+		<try doc:name="Try" doc:id="e359fddc-a2a8-4d65-a47f-419581b88bf1" >
+			<national-railway-train-services-api:create-customer doc:name="Create customer" doc:id="728b494b-8a55-4286-9f2a-ec1bdea8afcf" config-ref="National_Railway_Train_Services_API_Config" />
+			<error-handler >
+				<on-error-continue enableNotifications="true" logException="true" doc:name="On Error Continue" doc:id="4e3afb24-dcde-429f-96ae-683b05422c86" type="NATIONAL-RAILWAY-TRAIN-SERVICES-API:BAD_REQUEST, NATIONAL-RAILWAY-TRAIN-SERVICES-API:METHOD_NOT_ALLOWED, NATIONAL-RAILWAY-TRAIN-SERVICES-API:NOT_ACCEPTABLE, NATIONAL-RAILWAY-TRAIN-SERVICES-API:PARSING, NATIONAL-RAILWAY-TRAIN-SERVICES-API:SECURITY, NATIONAL-RAILWAY-TRAIN-SERVICES-API:TIMEOUT, NATIONAL-RAILWAY-TRAIN-SERVICES-API:TOO_MANY_REQUESTS, NATIONAL-RAILWAY-TRAIN-SERVICES-API:UNAUTHORIZED, NATIONAL-RAILWAY-TRAIN-SERVICES-API:UNSUPPORTED_MEDIA_TYPE, EXPRESSION, STREAM_MAXIMUM_SIZE_EXCEEDED">
+					<ee:transform doc:name="Error Message" doc:id="57bb4841-73d5-4851-9cd1-ae71c4d992b4" >
+						<ee:message >
+							<ee:set-payload ><![CDATA[%dw 2.0
+output application/json
+---
+{
+	"Error Type": error.errorType.identifier,
+	"Error Message": error.errorMessage.payload,
+	"Error Description": error.detailedDescription
+}]]></ee:set-payload>
+						</ee:message>
+					</ee:transform>
+					<json-logger:logger doc:name="User_DBRego_ErrorLogger" doc:id="5d6ad925-3c0c-415b-940c-5fcf4f93dd95" config-ref="JSON_Logger_Config" message="User DBRego ErrorLogs" priority="ERROR"/>
+				</on-error-continue>
+			</error-handler>
+		</try>
+		<json-logger:logger doc:name="UserDB_Rego_EndLogger" doc:id="423c0065-63ac-4800-be22-1297471e167e" config-ref="JSON_Logger_Config" message="User DB Registration End Logs"/>
+		<error-handler >
+			<on-error-continue enableNotifications="true" logException="true" doc:name="On Error Continue" doc:id="9fd6bccb-a612-4396-bb88-afcf9dbc2532" type="ANY">
+				<ee:transform doc:name="Error Payload" doc:id="c2d0f0b4-dcc9-49aa-bc7e-cf20eb800794" >
+					<ee:message >
+						<ee:set-payload ><![CDATA[%dw 2.0
+output application/json
+---
+if(vars.authPayload != null)
+{
+	"Error Payload": vars.authPayload	
+}
+else{
+	"Error Type": error.errorType.identifier,
+	"Error Message": error.errorMessage.payload,
+	"Error Description": error.detailedDescription
+}]]></ee:set-payload>
+					</ee:message>
+				</ee:transform>
+				<json-logger:logger doc:name="User Registration EAPI_ErrorLogger" doc:id="1f953bc4-c1e4-4d89-bed3-2ad4dcaca547" config-ref="JSON_Logger_Config" message="User Registration EAPI Error Logger" priority="ERROR"/>
+			</on-error-continue>
+		</error-handler>
+	</flow>
+	<flow name="user-train-delay-RaiseErrorFlow" doc:id="9f1dee3f-32aa-41bb-974f-c763e1933bdf" >
+		<json-logger:logger doc:name="user-train-delay-Default_StartLogger" doc:id="3f88ddfe-a938-4165-8667-e03c39ea17df" config-ref="JSON_Logger_Config" message="user Train Delay-Default Start Logs"/>
+		<raise-error doc:name="AuthRegistration_Issue" doc:id="dc2d49f2-ff86-4769-9a62-6166c47abf2a" type="EAPI:AUTH_REGO_CONNECTIVITY" description="Failure in Capturing details"/>
+		<error-handler >
+			<on-error-propagate enableNotifications="true" logException="true" doc:name="On Error Propagate" doc:id="9bb3e425-7f82-4047-a96e-e777b4b57bc1" type="EAPI:AUTH_REGO_CONNECTIVITY">
+				<ee:transform doc:name="Error Payload" doc:id="1b2649df-858e-42ef-878b-bbe8d2eca799">
+			<ee:message>
+				<ee:set-payload><![CDATA[%dw 2.0
+output application/json
+---
+if(vars.authPayload != null)
+{
+	"Error Payload": vars.authPayload	
+}
+else{
+	"Error Type": error.errorType.identifier,
+	"Error Message": error.errorMessage.payload,
+	"Error Description": error.detailedDescription
+}]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+				<json-logger:logger doc:name="user-train-delay-Default_ErrorLogger" doc:id="63c265e4-694a-47e5-954b-3898a5c2b8ee" config-ref="JSON_Logger_Config" message="User Train Delay Default Error Logger" tracePoint="END" priority="ERROR"/>
+			</on-error-propagate>
+		</error-handler>
+	</flow>
+	<flow name="user-train-delay-AuthenticationFlow" doc:id="54f092e9-60da-4642-a4eb-4d63f79b1ebb" >
+		<json-logger:logger doc:name="UserAuthentication_StartLogger" doc:id="af798444-1a87-4a47-9f72-afd338861a37" config-ref="JSON_Logger_Config" message="User Authentication Start Logs"/>
+		<ee:transform doc:name="PayloadJson" doc:id="3e2de2c4-c6cb-4aef-9a0e-ecfafb52a7ac" >
+			<ee:message >
+				<ee:set-payload ><![CDATA[%dw 2.0
+output application/json
+---
+payload]]></ee:set-payload>
+			</ee:message>
+			<ee:variables >
+				<ee:set-variable variableName="requestPath" ><![CDATA[attributes.maskedRequestPath]]></ee:set-variable>
+			</ee:variables>
+		</ee:transform>
+		<validation:is-not-null doc:name="NotNullCheck_OnEmailId" doc:id="d81b9f04-7ca2-4014-a3d4-9b17f7655df9" config-ref="Validation_Config" value="#[payload.emailId != null and payload.password != null]" message="EmailId and Password are mandatory"/>
+		<try doc:name="Try" doc:id="ea1796b5-00e9-4c88-8b20-e167cbf987ae" >
+			<user-authorisation-sapi:create-auth doc:name="Authentication" doc:id="ca2169e5-41f3-403b-a00d-24e084e2f227" config-ref="User_Authorisation_SAPI_Config" target="authPayload" client-secret="ZvV0zILKHMZHCJHZPJevm8FzCKYZL-hwZCwACQlR" client-id="0oaq5q0yiyF3BQEkQ5d6"/>
+			<error-handler >
+				<on-error-continue enableNotifications="true" logException="true" doc:name="On Error Continue" doc:id="e3176b13-f9d3-4e61-b1ee-669fe8d98319" type="USER-AUTHORISATION-SAPI:BAD_REQUEST, USER-AUTHORISATION-SAPI:METHOD_NOT_ALLOWED, USER-AUTHORISATION-SAPI:NOT_ACCEPTABLE, USER-AUTHORISATION-SAPI:PARSING, USER-AUTHORISATION-SAPI:SECURITY, USER-AUTHORISATION-SAPI:TIMEOUT, USER-AUTHORISATION-SAPI:TOO_MANY_REQUESTS, USER-AUTHORISATION-SAPI:UNAUTHORIZED, USER-AUTHORISATION-SAPI:UNSUPPORTED_MEDIA_TYPE, EXPRESSION, STREAM_MAXIMUM_SIZE_EXCEEDED">
+					<ee:transform doc:name="Error Payload" doc:id="032cf3fb-481c-4d07-b85b-0d11adb662fd" >
+						<ee:message >
+							<ee:set-payload ><![CDATA[%dw 2.0
+output application/json
+---
+{
+	"Error Type": error.errorType.identifier,
+	"Error Message": error.errorMessage.payload,
+	"Error Description": error.detailedDescription
+}]]></ee:set-payload>
+						</ee:message>
+					</ee:transform>
+					<json-logger:logger doc:name="UserAuth_ErrorLogger" doc:id="31d182ed-6285-42a4-a597-8706aa6f60d6" config-ref="JSON_Logger_Config" message="UserAuth Error Logs" priority="ERROR"/>
+				</on-error-continue>
+			</error-handler>
+		</try>
+		<choice doc:name="Choice" doc:id="b2740ffe-8382-4d9e-b920-bf65a3fe7d44" >
+		    <when expression="#[(vars.authPayload != null and vars.authPayload.'userid' != null) and (vars.requestPath != null and vars.requestPath == '/customers/login')]">
+				<flow-ref doc:name="User-AuthSuccess-Flow" doc:id="97682cdd-992b-4d90-9b19-e39885582494" name="User-AuthSuccess-Flow"/>
+			</when>
+			<when expression="#[vars.authPayload != null and vars.authPayload.'userid' != null]">
+				<flow-ref doc:name="User-AuthSuccess-Flow" doc:id="d59ed51d-1355-4eb9-8d33-bd3195b8c18c" name="User-AuthSuccess-Flow" target="authSuccessFlowRef"/>
+			</when>
+			<otherwise >
+				<flow-ref doc:name="user-train-delay-RaiseErrorFlow" doc:id="5036dd64-625d-449d-9a7f-a0bb925166d1" name="user-train-delay-RaiseErrorFlow"/>
+			</otherwise>
+		</choice>
+		<json-logger:logger doc:name="UserAuthentication_EndLogger" doc:id="ee28a5f1-f819-4269-b1b8-5e1897465a5e" config-ref="JSON_Logger_Config" message="User Authentication End Logs" tracePoint="END"/>
+		<error-handler >
+			<on-error-propagate enableNotifications="true" logException="true" doc:name="On Error Propagate" doc:id="96fa4d6f-542b-4263-b169-418a9fab4fcf" type="ANY">
+				<ee:transform doc:name="Error Message" doc:id="3e234b34-fc70-45c3-a88c-9a7997539b60" >
+					<ee:message >
+						<ee:set-payload ><![CDATA[%dw 2.0
+output application/json
+---
+if(vars.authPayload != null)
+{
+	"Error Payload": vars.authPayload	
+}
+else{
+	"Error Type": error.errorType.identifier,
+	"Error Message": error.errorMessage.payload,
+	"Error Description": error.detailedDescription
+}]]></ee:set-payload>
+					</ee:message>
+				</ee:transform>
+				<json-logger:logger doc:name="UserAuth_NotNull_ErrorLogger" doc:id="f1be108b-1eaf-43d1-ab4c-25c74a18e59f" config-ref="JSON_Logger_Config" message="User Authentication Not Null check error logs" priority="ERROR"/>
+			</on-error-propagate>
+		</error-handler>
+	</flow>
+	<flow name="User-AuthSuccess-Flow" doc:id="9e8089b2-7da7-43da-9025-a9d120b4405e" >
+		<json-logger:logger doc:name="User-AuthSuccess_StartLogger" doc:id="59c3b48a-c3b6-4dcf-8e0f-694251c51fa5" config-ref="JSON_Logger_Config" message="User-AuthSuccess Start Logs"/>
+		<ee:transform doc:name="Success Message" doc:id="2addb4e8-35b1-4d5a-b31c-fd2d35bd1782">
+			<ee:message>
+				<ee:set-payload><![CDATA[%dw 2.0
+output application/json
+---
+{
+	Message: vars.authPayload.Message,
+	id: vars.authPayload.'userid'
+}]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+		<error-handler >
+			<on-error-continue enableNotifications="true" logException="true" doc:name="On Error Continue" doc:id="66bf4daf-d3b1-4e59-be07-9e7ac1e226ff" type="ANY">
+				<ee:transform doc:name="Error Payload" doc:id="1c9b392c-3955-4103-a562-53b094e47dc3" >
+					<ee:message >
+						<ee:set-payload ><![CDATA[%dw 2.0
+output application/json
+---
+if(vars.authPayload != null)
+{
+	"Error Payload": vars.authPayload	
+}
+else{
+	"Error Type": error.errorType.identifier,
+	"Error Message": error.errorMessage.payload,
+	"Error Description": error.detailedDescription
+}]]></ee:set-payload>
+					</ee:message>
+				</ee:transform>
+				<json-logger:logger doc:name="Authentication Success Error Logger" doc:id="9e44058d-5e85-4bff-aed0-6021f093dca3" config-ref="JSON_Logger_Config" message="Authentication Success Error Logger" priority="ERROR"/>
+			</on-error-continue>
+		</error-handler>
+	</flow>
+	<flow name="user-Update-DetailsFlow" doc:id="59c8682a-9c59-462b-9a5b-510e1e6b94d5" >
+		<json-logger:logger doc:name="UserDetails_Update_StartLogger" doc:id="43c610d4-90b5-4189-9d85-06e61a51e966" config-ref="JSON_Logger_Config" message="UserDetails Update Start Logs"/>
+		<ee:transform doc:name="Payload" doc:id="56203fbc-cb34-4436-9e5d-d5715ef4a5be" >
+			<ee:message >
+				<ee:set-payload ><![CDATA[%dw 2.0
+output application/json
+---
+payload]]></ee:set-payload>
+			</ee:message>
+			<ee:variables >
+				<ee:set-variable variableName="custId" ><![CDATA[attributes.uriParams.'id']]></ee:set-variable>
+			</ee:variables>
+		</ee:transform>
+		<try doc:name="Try" doc:id="5f7c39cf-2ee5-4a61-a19a-58f7bc7ccab8" >
+			<user-authorisation-sapi:create-update doc:name="AuthorizationUpdate" doc:id="cd94e4c9-6cd8-4865-a43b-55bc2bec2997" config-ref="User_Authorisation_SAPI_Config" target="authPayload" client-secret="ZvV0zILKHMZHCJHZPJevm8FzCKYZL-hwZCwACQlR" client-id="0oaq5q0yiyF3BQEkQ5d6"/>
+			<error-handler >
+				<on-error-continue enableNotifications="true" logException="true" doc:name="On Error Continue" doc:id="b4e583da-7e4f-42e8-adf4-53ae51d25ca5" type="USER-AUTHORISATION-SAPI:BAD_REQUEST, USER-AUTHORISATION-SAPI:METHOD_NOT_ALLOWED, USER-AUTHORISATION-SAPI:NOT_ACCEPTABLE, USER-AUTHORISATION-SAPI:PARSING, USER-AUTHORISATION-SAPI:SECURITY, USER-AUTHORISATION-SAPI:TIMEOUT, USER-AUTHORISATION-SAPI:TOO_MANY_REQUESTS, USER-AUTHORISATION-SAPI:UNAUTHORIZED, USER-AUTHORISATION-SAPI:UNSUPPORTED_MEDIA_TYPE, EXPRESSION, STREAM_MAXIMUM_SIZE_EXCEEDED">
+					<ee:transform doc:name="Error Payload" doc:id="6ab44ce5-12a7-47f8-b8ae-6bd8118132a8" >
+						<ee:message >
+							<ee:set-payload ><![CDATA[%dw 2.0
+output application/json
+---
+{
+	"Error Type": error.errorType.identifier,
+	"Error Message": error.errorMessage.payload,
+	"Error Description": error.detailedDescription
+}]]></ee:set-payload>
+						</ee:message>
+					</ee:transform>
+					<json-logger:logger doc:name="User-UpdateDetails_AuthErrorLogger" doc:id="f3f4140e-9c86-47cb-a2fe-a0647394eade" config-ref="JSON_Logger_Config" message="User UpdateDetails AuthErrorLogger" priority="ERROR"/>
+				</on-error-continue>
+			</error-handler>
+		</try>
+		<choice doc:name="Choice" doc:id="847bfd05-be35-42ec-8c69-d3165d59b2b8" >
+			<when expression="#[vars.authPayload != null and vars.authPayload.'userid' != null and (vars.authPayload.'userid' as String == vars.custId as String)]">
+				<flow-ref doc:name="user-UpdateDB-DetailsFlow" doc:id="a8a9d0db-24f8-477d-bdae-efddfab62ac4" name="user-UpdateDB-DetailsFlow"/>
+			</when>
+			<otherwise >
+				<flow-ref doc:name="user-train-delay-RaiseErrorFlow" doc:id="d10828e5-8410-4902-bcef-3b6d6fa775e4" name="user-train-delay-RaiseErrorFlow"/>
+			</otherwise>
+		</choice>
+		<json-logger:logger doc:name="UserDetails_Update_EndLogger" doc:id="613ff2f8-ec56-4792-889d-d2e670d3b785" config-ref="JSON_Logger_Config" message="UserDetails Update End Logs" tracePoint="END"/>
+		<error-handler >
+			<on-error-continue enableNotifications="true" logException="true" doc:name="On Error Continue" doc:id="4d431852-f160-4617-89ea-6f549a1ed1d1" type="ANY">
+				<ee:transform doc:name="Error Payload" doc:id="54f7263b-bdfd-4e08-99bf-ec6f6fb22d44" >
+					<ee:message >
+						<ee:set-payload ><![CDATA[%dw 2.0
+output application/json
+---
+if(vars.authPayload != null)
+{
+	"Error Payload": vars.authPayload	
+}
+else{
+	"Error Type": error.errorType.identifier,
+	"Error Message": error.errorMessage.payload,
+	"Error Description": error.detailedDescription
+}]]></ee:set-payload>
+					</ee:message>
+				</ee:transform>
+				<json-logger:logger doc:name="User Update Details EAPI Error Logger" doc:id="d35c51fc-966d-4687-a62a-ea3f5149ca0d" config-ref="JSON_Logger_Config" message="User Update Details EAPI Error Logger"/>
+			</on-error-continue>
+		</error-handler>
+	</flow>
+	<flow name="user-UpdateDB-DetailsFlow" doc:id="01caa788-7690-40a9-940b-6fae54af251c" >
+		<json-logger:logger doc:name="User Details DB Update_StartLogger" doc:id="12dcf12a-7933-42ad-b913-8c5c83d1de79" config-ref="JSON_Logger_Config" message="User Details DB Update Start Logs"/>
+		<try doc:name="Try" doc:id="ad0fe0f8-e8c0-4058-8353-fed8e1bec5a5" >
+			<national-railway-train-services-api:update-customer-by-id doc:name="Update customer by id" doc:id="cbb560d9-2a65-41de-8785-6950ca2d34ce" config-ref="National_Railway_Train_Services_API_Config" id="#[vars.custId]" />
+			<error-handler >
+				<on-error-continue enableNotifications="true" logException="true" doc:name="On Error Continue" doc:id="6d1a14a8-b3c5-4e6d-a158-1597ac6781e2" type="NATIONAL-RAILWAY-TRAIN-SERVICES-API:BAD_REQUEST, NATIONAL-RAILWAY-TRAIN-SERVICES-API:METHOD_NOT_ALLOWED, NATIONAL-RAILWAY-TRAIN-SERVICES-API:NOT_ACCEPTABLE, NATIONAL-RAILWAY-TRAIN-SERVICES-API:PARSING, NATIONAL-RAILWAY-TRAIN-SERVICES-API:SECURITY, NATIONAL-RAILWAY-TRAIN-SERVICES-API:TIMEOUT, NATIONAL-RAILWAY-TRAIN-SERVICES-API:TOO_MANY_REQUESTS, NATIONAL-RAILWAY-TRAIN-SERVICES-API:UNAUTHORIZED, NATIONAL-RAILWAY-TRAIN-SERVICES-API:UNSUPPORTED_MEDIA_TYPE, EXPRESSION, STREAM_MAXIMUM_SIZE_EXCEEDED">
+					<ee:transform doc:name="Error Message" doc:id="bbc8ce0c-6fc5-41ff-832f-e166ed71f1ea" >
+						<ee:message >
+							<ee:set-payload ><![CDATA[%dw 2.0
+output application/json
+---
+{
+	"Error Type": error.errorType.identifier,
+	"Error Message": error.errorMessage.payload,
+	"Error Description": error.detailedDescription
+}]]></ee:set-payload>
+						</ee:message>
+					</ee:transform>
+					<json-logger:logger doc:name="user-UpdateDB-DetailsLogger" doc:id="2350e954-d723-4ca8-b3b4-c23eb370af3b" config-ref="JSON_Logger_Config" message="user UpdateDB Details Error Logs" priority="ERROR"/>
+				</on-error-continue>
+			</error-handler>
+		</try>
+		<json-logger:logger doc:name="UserDetails-DBUpdate_EndLogger" doc:id="50742496-87b8-4002-80d8-08ebfcdc45e5" config-ref="JSON_Logger_Config" message="User Details DB Update End Logs" tracePoint="END"/>
+		<error-handler >
+			<on-error-continue enableNotifications="true" logException="true" doc:name="On Error Continue" doc:id="11e4ee4d-1437-4065-a511-9cb2f141cc0e" type="ANY">
+				<ee:transform doc:name="Error Payload" doc:id="c74d94b5-926f-4080-ae01-9507f91a283e" >
+					<ee:message >
+						<ee:set-payload ><![CDATA[%dw 2.0
+output application/json
+---
+if(vars.authPayload != null)
+{
+	"Error Payload": vars.authPayload	
+}
+else{
+	"Error Type": error.errorType.identifier,
+	"Error Message": error.errorMessage.payload,
+	"Error Description": error.detailedDescription
+}]]></ee:set-payload>
+					</ee:message>
+				</ee:transform>
+				<json-logger:logger doc:name="User DB Update Details EAPI ErrorLogger" doc:id="6a7f51ad-2295-4198-93ac-85457d0c189a" config-ref="JSON_Logger_Config" message="User DB Update Details Error Logger" priority="ERROR"/>
+			</on-error-continue>
+		</error-handler>
+	</flow>
+	<flow name="user-SubscriptionRegistrationFlow" doc:id="7a772eec-67ea-4d83-a6c7-a2860ace53bd" >
+		<json-logger:logger doc:name="User Subscription Registration_StartLogger" doc:id="d0a4b365-8535-47c4-b5f2-7d2bdc0bc504" config-ref="JSON_Logger_Config" message="User Subscription Registration Start Logs"/>
+		<ee:transform doc:name="SubscriptionPayload" doc:id="2f59b94b-7242-440c-9294-8ae93cfe35fa" >
+			<ee:message >
+				<ee:set-payload ><![CDATA[%dw 2.0
+output application/json
+---
+payload]]></ee:set-payload>
+			</ee:message>
+			<ee:variables >
+				<ee:set-variable variableName="custId" ><![CDATA[attributes.uriParams.'id']]></ee:set-variable>
+			</ee:variables>
+		</ee:transform>
+		<try doc:name="Try" doc:id="e5995734-dd60-40ae-b2fc-4ec8184cf2cd" >
+			<national-railway-train-services-api:create-subscription-by-id doc:name="Create subscription by id" doc:id="07d52029-3862-4cd1-988c-0f3b258edcd2" config-ref="National_Railway_Train_Services_API_Config" id="#[vars.custId]"/>
+			<error-handler >
+				<on-error-continue enableNotifications="true" logException="true" doc:name="On Error Continue" doc:id="05eb0848-94cd-4aa0-8ed5-e0d622759872" type="NATIONAL-RAILWAY-TRAIN-SERVICES-API:BAD_REQUEST, NATIONAL-RAILWAY-TRAIN-SERVICES-API:METHOD_NOT_ALLOWED, NATIONAL-RAILWAY-TRAIN-SERVICES-API:NOT_ACCEPTABLE, NATIONAL-RAILWAY-TRAIN-SERVICES-API:PARSING, NATIONAL-RAILWAY-TRAIN-SERVICES-API:SECURITY, NATIONAL-RAILWAY-TRAIN-SERVICES-API:TIMEOUT, NATIONAL-RAILWAY-TRAIN-SERVICES-API:TOO_MANY_REQUESTS, NATIONAL-RAILWAY-TRAIN-SERVICES-API:UNAUTHORIZED, NATIONAL-RAILWAY-TRAIN-SERVICES-API:UNSUPPORTED_MEDIA_TYPE, EXPRESSION, STREAM_MAXIMUM_SIZE_EXCEEDED">
+					<ee:transform doc:name="Error Message" doc:id="b5a669bf-6de8-4c6e-8826-e594798b09b5" >
+						<ee:message >
+							<ee:set-payload ><![CDATA[%dw 2.0
+output application/json
+---
+{
+	"Error Type": error.errorType.identifier,
+	"Error Message": error.errorMessage.payload,
+	"Error Description": error.detailedDescription
+}]]></ee:set-payload>
+						</ee:message>
+					</ee:transform>
+					<json-logger:logger doc:name="UserSubscription_Registration_ErrorLogger" doc:id="dd42140b-bb12-4fbd-894e-47d21212b9bd" config-ref="JSON_Logger_Config" message="User Subscription Registration Error Logs" priority="ERROR"/>
+				</on-error-continue>
+			</error-handler>
+		</try>
+		<json-logger:logger doc:name="User Subscription Registration_EndLogger" doc:id="63062781-bc69-4f9f-b6a0-94cdf1fbda35" config-ref="JSON_Logger_Config" message="User Subscription Registration End Logs" tracePoint="END"/>
+		<error-handler >
+			<on-error-continue enableNotifications="true" logException="true" doc:name="On Error Continue" doc:id="d0b9f966-97c3-4354-95c9-524aa7b28454" type="ANY">
+				<ee:transform doc:name="Error Payload" doc:id="9554e167-5eee-4bf2-8a08-cb39c3949d69" >
+					<ee:message >
+						<ee:set-payload ><![CDATA[%dw 2.0
+output application/json
+---
+if(vars.authPayload != null)
+{
+	"Error Payload": vars.authPayload	
+}
+else{
+	"Error Type": error.errorType.identifier,
+	"Error Message": error.errorMessage.payload,
+	"Error Description": error.detailedDescription
+}]]></ee:set-payload>
+					</ee:message>
+				</ee:transform>
+				<json-logger:logger doc:name="User SubscriptionRegistration_ErrorLogger" doc:id="de797268-6b16-4b01-85e3-77ff642c4211" config-ref="JSON_Logger_Config" message="User Subscription Registration Error Logs" priority="ERROR"/>
+			</on-error-continue>
+		</error-handler>
+	</flow>
+	<flow name="user-SubscriptionUpdateFlow" doc:id="8b2a65e6-338b-41fc-8c9d-99c4df6d6b9a" >
+		<json-logger:logger doc:name="User Subscription_Update_StartLogger" doc:id="7695fcac-9d00-4e09-9e18-96f940c62d03" config-ref="JSON_Logger_Config" message="User Subscription Details Update Start Logs"/>
+		<ee:transform doc:name="PayloadJson" doc:id="4fe262a8-019e-4fce-a121-a6fd20774715" >
+			<ee:message >
+				<ee:set-payload ><![CDATA[%dw 2.0
+output application/json
+---
+payload]]></ee:set-payload>
+			</ee:message>
+			<ee:variables >
+				<ee:set-variable variableName="custId" ><![CDATA[attributes.uriParams.'id']]></ee:set-variable>
+				<ee:set-variable variableName="subsId" ><![CDATA[attributes.uriParams.'subscriptionId']]></ee:set-variable>
+			</ee:variables>
+		</ee:transform>
+		<try doc:name="Try" doc:id="1fb3dd33-d150-45d9-aa85-65277a6f5c17" >
+			<national-railway-train-services-api:update-subscription-by-id-subscription-id doc:name="Update subscription by id subscription id" doc:id="21898b0d-b2aa-4ab9-9eaf-471cfa9cf0e2" config-ref="National_Railway_Train_Services_API_Config" id="#[vars.custId]" subscription-id="#[vars.subsId]" />
+			<error-handler >
+				<on-error-continue enableNotifications="true" logException="true" doc:name="On Error Continue" doc:id="addca81f-68ae-4db4-844e-8710a6a3866f" type="NATIONAL-RAILWAY-TRAIN-SERVICES-API:BAD_REQUEST, NATIONAL-RAILWAY-TRAIN-SERVICES-API:METHOD_NOT_ALLOWED, NATIONAL-RAILWAY-TRAIN-SERVICES-API:NOT_ACCEPTABLE, NATIONAL-RAILWAY-TRAIN-SERVICES-API:PARSING, NATIONAL-RAILWAY-TRAIN-SERVICES-API:SECURITY, NATIONAL-RAILWAY-TRAIN-SERVICES-API:TIMEOUT, NATIONAL-RAILWAY-TRAIN-SERVICES-API:TOO_MANY_REQUESTS, NATIONAL-RAILWAY-TRAIN-SERVICES-API:UNAUTHORIZED, NATIONAL-RAILWAY-TRAIN-SERVICES-API:UNSUPPORTED_MEDIA_TYPE, EXPRESSION, STREAM_MAXIMUM_SIZE_EXCEEDED">
+					<ee:transform doc:name="Error Message" doc:id="01c93b84-6a7f-45cd-9f88-49ff8e8d3478" >
+						<ee:message >
+							<ee:set-payload ><![CDATA[%dw 2.0
+output application/json
+---
+{
+	"Error Type": error.errorType.identifier,
+	"Error Message": error.errorMessage.payload,
+	"Error Description": error.detailedDescription
+}]]></ee:set-payload>
+						</ee:message>
+					</ee:transform>
+					<json-logger:logger doc:name="user_SubscriptionUpdate_ErrorLogger" doc:id="102093d4-0b86-4957-891c-5ad73249e394" config-ref="JSON_Logger_Config" message="user SubscriptionUpdate ErrorLogs" priority="ERROR"/>
+				</on-error-continue>
+			</error-handler>
+		</try>
+		<json-logger:logger doc:name="User Subscription_DetailsUpdate_EndLogger" doc:id="a9a907b2-eb96-4d8d-829e-59a6d8238959" config-ref="JSON_Logger_Config" message="User Subscription Details Update End Logs" tracePoint="END"/>
+		<error-handler >
+			<on-error-continue enableNotifications="true" logException="true" doc:name="On Error Continue" doc:id="15b9f0dc-abc3-4af6-bde7-485a5ef3c257" type="ANY">
+				<ee:transform doc:name="Error Payload" doc:id="6005390a-f3c8-4064-8b9f-20f70107a881" >
+					<ee:message >
+						<ee:set-payload ><![CDATA[%dw 2.0
+output application/json
+---
+if(vars.authPayload != null)
+{
+	"Error Payload": vars.authPayload	
+}
+else{
+	"Error Type": error.errorType.identifier,
+	"Error Message": error.errorMessage.payload,
+	"Error Description": error.detailedDescription
+}]]></ee:set-payload>
+					</ee:message>
+				</ee:transform>
+				<json-logger:logger doc:name="User SubscriptionUpdate ErrorLogger" doc:id="e7f9e6f5-6f04-4fdf-8bf9-5cce9d85a328" config-ref="JSON_Logger_Config" message="User Subscription Update Error Logs" priority="ERROR"/>
+			</on-error-continue>
+		</error-handler>
+	</flow>
+	<flow name="user-GetCustomerDetailsFlow" doc:id="2925ed3e-8780-46cf-8ee9-3754590b0535" >
+		<json-logger:logger doc:name="User GetCustomer Details_Start Logger" doc:id="2eeff4d1-3b23-4999-aa52-c61882e99fc3" config-ref="JSON_Logger_Config" message="User Get Customer Details Start Logs"/>
+		<try doc:name="Try" doc:id="d48eff46-a22c-4446-b9b5-130c36c3229c" >
+			<national-railway-train-services-api:get-customers doc:name="Get customers" doc:id="d1b73882-1a3a-4217-b2a8-3fce2b3db307" config-ref="National_Railway_Train_Services_API_Config" />
+			<error-handler >
+				<on-error-continue enableNotifications="true" logException="true" doc:name="On Error Continue" doc:id="7cf00ec8-a0e4-462a-9e83-acc62acd998c" type="NATIONAL-RAILWAY-TRAIN-SERVICES-API:BAD_REQUEST, NATIONAL-RAILWAY-TRAIN-SERVICES-API:METHOD_NOT_ALLOWED, NATIONAL-RAILWAY-TRAIN-SERVICES-API:NOT_ACCEPTABLE, NATIONAL-RAILWAY-TRAIN-SERVICES-API:PARSING, NATIONAL-RAILWAY-TRAIN-SERVICES-API:SECURITY, NATIONAL-RAILWAY-TRAIN-SERVICES-API:TIMEOUT, NATIONAL-RAILWAY-TRAIN-SERVICES-API:TOO_MANY_REQUESTS, NATIONAL-RAILWAY-TRAIN-SERVICES-API:UNAUTHORIZED, NATIONAL-RAILWAY-TRAIN-SERVICES-API:UNSUPPORTED_MEDIA_TYPE, EXPRESSION, STREAM_MAXIMUM_SIZE_EXCEEDED">
+					<ee:transform doc:name="Error Payload" doc:id="3491b475-9f1e-4465-9471-62ac37aabf45" >
+						<ee:message >
+							<ee:set-payload ><![CDATA[%dw 2.0
+output application/json
+---
+{
+	"Error Type": error.errorType.identifier,
+	"Error Message": error.errorMessage.payload,
+	"Error Description": error.detailedDescription
+}]]></ee:set-payload>
+						</ee:message>
+					</ee:transform>
+					<json-logger:logger doc:name="GetCustomers_ErrorLogger" doc:id="d5c19678-b407-4e3e-a295-6a8bc6159367" config-ref="JSON_Logger_Config" message="Get All Customer Details Error Logs" priority="ERROR"/>
+				</on-error-continue>
+			</error-handler>
+		</try>
+		<ee:transform doc:name="FinalPayload" doc:id="133462d9-8a61-4723-975e-c02793397220" >
+			<ee:message >
+				<ee:set-payload ><![CDATA[%dw 2.0
+output application/json
+---
+if(isEmpty(payload))
+{
+	Message: "No Records Found"
+}
+else
+	payload
+]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+		<json-logger:logger doc:name="User GetCustomer Details_EndLogger" doc:id="b05f23db-6b5c-463c-b322-7000e1dff6b3" config-ref="JSON_Logger_Config" message="User Get Customer Details End Logs" tracePoint="END"/>
+		<error-handler >
+			<on-error-continue enableNotifications="true" logException="true" doc:name="On Error Continue" doc:id="c5476890-1a40-4d91-8b6c-0b6f1cded896" type="ANY">
+				<ee:transform doc:name="Error Payload" doc:id="f93a511a-b752-4bdc-8f3d-fc4878bc0629" >
+					<ee:message >
+						<ee:set-payload ><![CDATA[%dw 2.0
+output application/json
+---
+if(vars.authPayload != null)
+{
+	"Error Payload": vars.authPayload	
+}
+else{
+	"Error Type": error.errorType.identifier,
+	"Error Message": error.errorMessage.payload,
+	"Error Description": error.detailedDescription
+}]]></ee:set-payload>
+					</ee:message>
+				</ee:transform>
+				<json-logger:logger doc:name="GetCustomerDetails_ErrorLogger" doc:id="d8574b95-6541-47cb-94a4-e3185676158a" config-ref="JSON_Logger_Config" message="Get Customer Details Error Logger" priority="ERROR"/>
+			</on-error-continue>
+		</error-handler>
+	</flow>
+	<flow name="user-GetCustomerByIDFlow" doc:id="5bc8821b-4cd8-4b88-8586-78e7ba867ade" >
+		<json-logger:logger doc:name="user-GetCustomerByID_Details_StartLogger" doc:id="e04c1a73-9e68-4734-a287-b57e3fdbb704" config-ref="JSON_Logger_Config" message="GetCustomerByID Details Start Logs"/>
+		<ee:transform doc:name="AuthVariable" doc:id="47c8f130-b8f5-4691-8f5e-9f9eb07523bd">
+			<ee:message>
+			</ee:message>
+			<ee:variables>
+				<ee:set-variable variableName="auth"><![CDATA[attributes.headers.authorization]]></ee:set-variable>
+				<ee:set-variable variableName="custId" ><![CDATA[attributes.uriParams.'id']]></ee:set-variable>
+			</ee:variables>
+		</ee:transform>
+		<ee:transform doc:name="PayloadToAuth" doc:id="fc3fda9f-3b6f-476f-83ee-060491c47396">
+			<ee:message>
+				<ee:set-payload><![CDATA[%dw 2.0
+
+import * from dw::core::Binaries
+
+output application/json
+
+var at = vars.auth default ""
+
+---
+
+{
+
+emailId: (fromBase64(at replace "Basic " with "") splitBy(':'))[0],
+password: (fromBase64(at replace "Basic " with "") splitBy(':'))[1]
+
+}]]></ee:set-payload>
+			</ee:message>
+			<ee:variables>
+			</ee:variables>
+		</ee:transform>
+		<flow-ref doc:name="user-train-delay-AuthenticationFlow" doc:id="d86d4ddf-c6ba-4847-9b13-8faa5bfe8985" name="user-train-delay-AuthenticationFlow" />
+		<choice doc:name="Choice" doc:id="677939dd-a87a-4353-a9ad-82cb8ebad60f" >
+			<when expression="#[vars.authPayload != null and vars.authPayload.'userid' != null and vars.authPayload.'userid' as String == vars.custId as String]">
+				<flow-ref doc:name="user-GetCustomerByIDDBFlow" doc:id="d57ed131-cdb2-45e2-96cc-339c12b16509" name="user-GetCustomerByIDDBFlow"/>
+			</when>
+			<otherwise >
+				<flow-ref doc:name="user-train-delay-RaiseErrorFlow" doc:id="b1a6ce1b-c1c0-440e-ae6c-ef92d1e9931e" name="user-train-delay-RaiseErrorFlow"/>
+			</otherwise>
+		</choice>
+		<ee:transform doc:name="Final Payload" doc:id="c2225e00-5027-48f9-8b2f-cf3fb4f708d1" >
+			<ee:message >
+				<ee:set-payload ><![CDATA[%dw 2.0
+output application/json
+---
+if(isEmpty(payload))
+{
+	Message: "No Records Found"
+}
+else
+	payload
+]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+		<json-logger:logger doc:name="User-GetCustomerByID_EndLogger" doc:id="1687d0df-73f8-4e81-9e52-996a105ddbf1" config-ref="JSON_Logger_Config" message="GetCustomerByID Details End Logs" tracePoint="END"/>
+		<error-handler >
+			<on-error-continue enableNotifications="true" logException="true" doc:name="On Error Continue" doc:id="a04a2932-57e4-4dc2-9dc1-c5ce46e9de94" type="ANY">
+				<ee:transform doc:name="Error Payload" doc:id="2521abcc-7b91-4f9b-b848-a36acd2b320a" >
+					<ee:message >
+						<ee:set-payload ><![CDATA[%dw 2.0
+output application/json
+---
+if(vars.authPayload != null)
+{
+	"Error Payload": vars.authPayload	
+}
+else{
+	"Error Type": error.errorType.identifier,
+	"Error Message": error.errorMessage.payload,
+	"Error Description": error.detailedDescription
+}]]></ee:set-payload>
+					</ee:message>
+				</ee:transform>
+				<json-logger:logger doc:name="GetCustomerBy ID ErrorLogger" doc:id="11261d39-ec4e-4a11-83a4-edb2da030a49" config-ref="JSON_Logger_Config" message="GetCustomer ByID details Error Logger" priority="ERROR"/>
+			</on-error-continue>
+		</error-handler>
+	</flow>
+	<flow name="user-GetCustomerByIDDBFlow" doc:id="ce7c1ba6-e4b7-47ee-b1e1-2f179d652b42" >
+		<json-logger:logger doc:name="User GetCustomerDetails ByID DB Call Logger" doc:id="800b6bc7-4547-4f05-93e3-e027560e1ebf" config-ref="JSON_Logger_Config" message="User GetCustomerDetails ByID DB Call Start Logger"/>
+		<try doc:name="Try" doc:id="81402b53-f969-4165-82d5-8cdf838ab985">
+			<national-railway-train-services-api:get-customer-by-id doc:name="Get customer by id" doc:id="b59ecee6-4b69-4b33-993c-c0957af69d42" config-ref="National_Railway_Train_Services_API_Config" id="#[vars.custId]" />
+			<error-handler>
+				<on-error-continue enableNotifications="true" logException="true" doc:name="On Error Continue" doc:id="967d1f1f-511d-483b-b086-591764a778a1" type="NATIONAL-RAILWAY-TRAIN-SERVICES-API:BAD_REQUEST, NATIONAL-RAILWAY-TRAIN-SERVICES-API:METHOD_NOT_ALLOWED, NATIONAL-RAILWAY-TRAIN-SERVICES-API:NOT_ACCEPTABLE, NATIONAL-RAILWAY-TRAIN-SERVICES-API:PARSING, NATIONAL-RAILWAY-TRAIN-SERVICES-API:SECURITY, NATIONAL-RAILWAY-TRAIN-SERVICES-API:TIMEOUT, NATIONAL-RAILWAY-TRAIN-SERVICES-API:TOO_MANY_REQUESTS, NATIONAL-RAILWAY-TRAIN-SERVICES-API:UNAUTHORIZED, NATIONAL-RAILWAY-TRAIN-SERVICES-API:UNSUPPORTED_MEDIA_TYPE, EXPRESSION, STREAM_MAXIMUM_SIZE_EXCEEDED">
+					<ee:transform doc:name="Error Message" doc:id="e738cda6-ab51-4086-bceb-54def53c32fa">
+						<ee:message>
+							<ee:set-payload><![CDATA[%dw 2.0
+output application/json
+---
+{
+	"Error Type": error.errorType.identifier,
+	"Error Message": error.errorMessage.payload,
+	"Error Description": error.detailedDescription
+}]]></ee:set-payload>
+						</ee:message>
+					</ee:transform>
+					<json-logger:logger doc:name="GetCustomer ByID_ErrorLogger" doc:id="679eb8a1-bf33-4950-92dd-ffffd975193e" config-ref="JSON_Logger_Config" message="Get Customer Details by ID Error Logs" priority="ERROR" />
+				</on-error-continue>
+			</error-handler>
+		</try>
+		<json-logger:logger doc:name="User GetCustomer Details ByID DB End Logger" doc:id="f8cbfd63-dea7-4f24-8027-1a9846fe9b22" config-ref="JSON_Logger_Config" message="User GetCustomer Details ByID DB End Logger" tracePoint="END"/>
+	</flow>
+	<flow name="user-GetSubscriptionFlow" doc:id="4d400d76-e641-4577-9f96-69f02757917f" >
+		<json-logger:logger doc:name="User GetSubscription_StartLogger" doc:id="22fd8b37-ed7b-4f48-b98e-94929963624f" config-ref="JSON_Logger_Config" message="User Get Subscription Details Start Logs"/>
+		<ee:transform doc:name="CustomerId" doc:id="88536a7f-1cda-45af-939f-413ddce13c69" >
+			<ee:message >
+			</ee:message>
+			<ee:variables >
+				<ee:set-variable variableName="custId" ><![CDATA[attributes.uriParams.'id']]></ee:set-variable>
+			</ee:variables>
+		</ee:transform>
+		<try doc:name="Try" doc:id="05914441-d24b-4873-8706-28a8944e5f24" >
+			<national-railway-train-services-api:get-subscriptions-by-id doc:name="Get subscriptions by id" doc:id="ccf31a7f-1ef4-458a-9f83-7be3deb07d6c" config-ref="National_Railway_Train_Services_API_Config" id="#[vars.custId]"/>
+			<error-handler >
+				<on-error-continue enableNotifications="true" logException="true" doc:name="On Error Continue" doc:id="ac5dfe94-4a0f-42f3-9a91-26456ec59ae6" type="NATIONAL-RAILWAY-TRAIN-SERVICES-API:BAD_REQUEST, NATIONAL-RAILWAY-TRAIN-SERVICES-API:METHOD_NOT_ALLOWED, NATIONAL-RAILWAY-TRAIN-SERVICES-API:NOT_ACCEPTABLE, NATIONAL-RAILWAY-TRAIN-SERVICES-API:PARSING, NATIONAL-RAILWAY-TRAIN-SERVICES-API:SECURITY, NATIONAL-RAILWAY-TRAIN-SERVICES-API:TIMEOUT, NATIONAL-RAILWAY-TRAIN-SERVICES-API:TOO_MANY_REQUESTS, NATIONAL-RAILWAY-TRAIN-SERVICES-API:UNAUTHORIZED, NATIONAL-RAILWAY-TRAIN-SERVICES-API:UNSUPPORTED_MEDIA_TYPE, EXPRESSION, STREAM_MAXIMUM_SIZE_EXCEEDED">
+					<ee:transform doc:name="Error Message" doc:id="6198a8c4-d900-4d24-a7a6-d4b2687b8380" >
+						<ee:message >
+							<ee:set-payload ><![CDATA[%dw 2.0
+output application/json
+---
+{
+	"Error Type": error.errorType.identifier,
+	"Error Message": error.errorMessage.payload,
+	"Error Description": error.detailedDescription
+}]]></ee:set-payload>
+						</ee:message>
+					</ee:transform>
+					<json-logger:logger doc:name="GetSubscription_ErrorLogger" doc:id="118c585a-8180-446a-887e-cff2fdcb0253" config-ref="JSON_Logger_Config" message="Get Subscription Details Error Logs" priority="ERROR"/>
+				</on-error-continue>
+			</error-handler>
+		</try>
+		<ee:transform doc:name="Final Payload" doc:id="c9b94107-45fc-4fec-a43e-ef1954dc8b7b" >
+			<ee:message >
+				<ee:set-payload ><![CDATA[%dw 2.0
+output application/json
+---
+if(isEmpty(payload))
+{
+	Message: "No Records Found"
+}
+else
+	payload
+]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+		<json-logger:logger doc:name="User Get Subscription Details_EndLogger" doc:id="7ab839e7-30b4-4bf0-ba58-97b93adfe6bc" config-ref="JSON_Logger_Config" message="User Get Subscription Details Start Logs" tracePoint="END"/>
+		<error-handler >
+			<on-error-continue enableNotifications="true" logException="true" doc:name="On Error Continue" doc:id="8898977f-4275-44fa-b05c-735511687c75" type="ANY">
+				<ee:transform doc:name="Error Payload" doc:id="9433b04e-7032-4e08-832b-3f2a574b5c8f" >
+					<ee:message >
+						<ee:set-payload ><![CDATA[%dw 2.0
+output application/json
+---
+if(vars.authPayload != null)
+{
+	"Error Payload": vars.authPayload	
+}
+else{
+	"Error Type": error.errorType.identifier,
+	"Error Message": error.errorMessage.payload,
+	"Error Description": error.detailedDescription
+}]]></ee:set-payload>
+					</ee:message>
+				</ee:transform>
+				<json-logger:logger doc:name="User GetSubscription GetDetails Error Logger" doc:id="81e30afb-db44-47f7-936d-128b272a1f71" config-ref="JSON_Logger_Config" message="User GetSubscription Details Error Logger" priority="ERROR"/>
+			</on-error-continue>
+		</error-handler>
+	</flow>
+	<flow name="user-GetSubscriptionByIDFlow" doc:id="16194267-fe19-429b-aab6-d3fa64307362" >
+		<json-logger:logger doc:name="User Get SubscriptionByID_Details_StartLogger" doc:id="da3942f6-b361-4e43-a8c5-32762b6178ac" config-ref="JSON_Logger_Config" message="User Get Subscription Details By ID Start Logs"/>
+		<ee:transform doc:name="Variables" doc:id="9eaea0e4-8edd-4948-8f69-21045a44f169" >
+			<ee:message >
+			</ee:message>
+			<ee:variables >
+				<ee:set-variable variableName="custId" ><![CDATA[attributes.uriParams.'id']]></ee:set-variable>
+				<ee:set-variable variableName="subsId" ><![CDATA[attributes.uriParams.'subscriptionId']]></ee:set-variable>
+			</ee:variables>
+		</ee:transform>
+		<try doc:name="Try" doc:id="bf969a64-fd4c-44a2-9c2d-8ea5f3c7ebb7" >
+			<national-railway-train-services-api:get-subscription-by-id-subscription-id doc:name="Get subscription by id subscription id" doc:id="c1492d41-9e9c-4590-a489-4e6606460ef5" config-ref="National_Railway_Train_Services_API_Config" id="#[vars.custId]" subscription-id="#[vars.subsId]"/>
+			<error-handler >
+				<on-error-continue enableNotifications="true" logException="true" doc:name="On Error Continue" doc:id="c11445e6-6ed6-4bf1-b769-5a7122a54a2b" type="NATIONAL-RAILWAY-TRAIN-SERVICES-API:BAD_REQUEST, NATIONAL-RAILWAY-TRAIN-SERVICES-API:METHOD_NOT_ALLOWED, NATIONAL-RAILWAY-TRAIN-SERVICES-API:NOT_ACCEPTABLE, NATIONAL-RAILWAY-TRAIN-SERVICES-API:PARSING, NATIONAL-RAILWAY-TRAIN-SERVICES-API:SECURITY, NATIONAL-RAILWAY-TRAIN-SERVICES-API:TIMEOUT, NATIONAL-RAILWAY-TRAIN-SERVICES-API:TOO_MANY_REQUESTS, NATIONAL-RAILWAY-TRAIN-SERVICES-API:UNAUTHORIZED, NATIONAL-RAILWAY-TRAIN-SERVICES-API:UNSUPPORTED_MEDIA_TYPE, EXPRESSION, STREAM_MAXIMUM_SIZE_EXCEEDED">
+					<ee:transform doc:name="Error Message" doc:id="03eb59d1-5953-4d72-b06c-3d17b6386204" >
+						<ee:message >
+							<ee:set-payload ><![CDATA[%dw 2.0
+output application/json
+---
+{
+	"Error Type": error.errorType.identifier,
+	"Error Message": error.errorMessage.payload,
+	"Error Description": error.detailedDescription
+}]]></ee:set-payload>
+						</ee:message>
+					</ee:transform>
+					<json-logger:logger doc:name="Get Subscription Details_ErrorLogger" doc:id="77f4c30b-c079-4663-ba75-8282407d422d" config-ref="JSON_Logger_Config" message="Get Subscription Details By Id Error Logs" priority="ERROR"/>
+				</on-error-continue>
+			</error-handler>
+		</try>
+		<ee:transform doc:name="Final Payload" doc:id="c62e51f2-1a5b-447c-9857-ea4e5ac33c6b" >
+			<ee:message >
+				<ee:set-payload ><![CDATA[%dw 2.0
+output application/json
+---
+if(isEmpty(payload))
+{
+	Message: "No Records Found"
+}
+else
+	payload
+]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+		<json-logger:logger doc:name="User Get Subscription_DetailsByID_EndLogger" doc:id="e9adfba2-ea34-4c39-84aa-3875d8eba1fd" config-ref="JSON_Logger_Config" message="User Get Subscription Details By ID End Logs" tracePoint="END"/>
+		<error-handler >
+			<on-error-continue enableNotifications="true" logException="true" doc:name="On Error Continue" doc:id="09f80e4b-2085-4799-9e48-4aafcb286e98" type="ANY">
+				<ee:transform doc:name="Error Payload" doc:id="0b3aa60d-36fa-4800-90eb-db4141801400" >
+					<ee:message >
+						<ee:set-payload ><![CDATA[%dw 2.0
+output application/json
+---
+if(vars.authPayload != null)
+{
+	"Error Payload": vars.authPayload	
+}
+else{
+	"Error Type": error.errorType.identifier,
+	"Error Message": error.errorMessage.payload,
+	"Error Description": error.detailedDescription
+}]]></ee:set-payload>
+					</ee:message>
+				</ee:transform>
+				<json-logger:logger doc:name="User GetSubscription By Id Details Error Logger" doc:id="cbae95b4-48f6-42e2-8b9d-4934ed49837e" config-ref="JSON_Logger_Config" message="User GetSubscription ByID Details Error Logger" priority="ERROR"/>
+			</on-error-continue>
+		</error-handler>
+	</flow>
+	<flow name="user-GetAlertsFlow" doc:id="5247b581-ef09-4f8b-91d7-3dc3760a5a1a" >
+		<json-logger:logger doc:name="User-AlertDetails Logger" doc:id="d98ccf06-1002-4139-9876-788070b6418a" config-ref="JSON_Logger_Config" message="User Alert Details Start Logs"/>
+		<ee:transform doc:name="Variables" doc:id="2186807d-e465-457b-9242-2517dad38b47" >
+			<ee:message >
+			</ee:message>
+			<ee:variables >
+				<ee:set-variable variableName="custId" ><![CDATA[attributes.uriParams.'id']]></ee:set-variable>
+				<ee:set-variable variableName="subsId" ><![CDATA[attributes.uriParams.'subscriptionId']]></ee:set-variable>
+			</ee:variables>
+		</ee:transform>
+		<try doc:name="Try" doc:id="1f709549-c538-42b2-a372-a0e557e5039b" >
+			<national-railway-train-services-api:get-alerts-by-id-subscription-id doc:name="Get alerts by id subscription id" doc:id="ec6b2b64-eccc-4c02-8e80-e4c30bf6caad" config-ref="National_Railway_Train_Services_API_Config" id="#[vars.custId]" subscription-id="#[vars.subsId]"/>
+			<error-handler >
+				<on-error-continue enableNotifications="true" logException="true" doc:name="On Error Continue" doc:id="8b9510c4-a5d3-481b-b824-bad710cf509c" type="NATIONAL-RAILWAY-TRAIN-SERVICES-API:BAD_REQUEST, NATIONAL-RAILWAY-TRAIN-SERVICES-API:METHOD_NOT_ALLOWED, NATIONAL-RAILWAY-TRAIN-SERVICES-API:NOT_ACCEPTABLE, NATIONAL-RAILWAY-TRAIN-SERVICES-API:PARSING, NATIONAL-RAILWAY-TRAIN-SERVICES-API:SECURITY, NATIONAL-RAILWAY-TRAIN-SERVICES-API:TIMEOUT, NATIONAL-RAILWAY-TRAIN-SERVICES-API:TOO_MANY_REQUESTS, NATIONAL-RAILWAY-TRAIN-SERVICES-API:UNAUTHORIZED, NATIONAL-RAILWAY-TRAIN-SERVICES-API:UNSUPPORTED_MEDIA_TYPE, EXPRESSION, STREAM_MAXIMUM_SIZE_EXCEEDED">
+					<ee:transform doc:name="Error Payload" doc:id="1c735441-955d-43fb-be2e-8477a0021432" >
+						<ee:message >
+							<ee:set-payload ><![CDATA[%dw 2.0
+output application/json
+---
+{
+	"Error Type": error.errorType.identifier,
+	"Error Message": error.errorMessage.payload,
+	"Error Description": error.detailedDescription
+}]]></ee:set-payload>
+						</ee:message>
+					</ee:transform>
+					<json-logger:logger doc:name="User AlertDetails ErrorLogger" doc:id="bd8154a7-e14d-43dc-9cec-d45e28152029" config-ref="JSON_Logger_Config" message="User AlertDetails Connector ErrorLogger" priority="ERROR"/>
+				</on-error-continue>
+			</error-handler>
+		</try>
+		<ee:transform doc:name="FinalPayload" doc:id="abeefb6a-e86a-45b8-b0dc-870d696e5176" >
+			<ee:message >
+				<ee:set-payload ><![CDATA[%dw 2.0
+output application/json
+---
+if(isEmpty(payload))
+{
+	Message: "No Records Found"
+}
+else
+	payload
+]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+		<json-logger:logger doc:name="User Alert Details EndLogger" doc:id="f3426b51-64de-4ccf-b18c-1bb23e449742" config-ref="JSON_Logger_Config" message="User Alert Details End Logs" tracePoint="END"/>
+		<error-handler >
+			<on-error-continue enableNotifications="true" logException="true" doc:name="On Error Continue" doc:id="5f62647f-fc37-4e9d-9157-8b637005c02c" type="ANY">
+				<ee:transform doc:name="Error Payload" doc:id="fba152be-a946-4593-8414-c32bd6feffb0" >
+					<ee:message >
+						<ee:set-payload ><![CDATA[%dw 2.0
+output application/json
+---
+{
+	"Error Type": error.errorType.identifier,
+	"Error Message": error.errorMessage.payload,
+	"Error Description": error.detailedDescription
+}]]></ee:set-payload>
+					</ee:message>
+				</ee:transform>
+				<json-logger:logger doc:name="User Alert Details Error Logger" doc:id="8fc991c2-73da-4679-a6ce-1d9020d4ce8b" config-ref="JSON_Logger_Config" message="User Alert Details Error Logger" priority="ERROR"/>
+			</on-error-continue>
+		</error-handler>
+	</flow>
+	<flow name="user-GetAlertDetails-ByIDFlow" doc:id="b1a0078c-d032-49d6-abcf-c2988346ac7d" >
+		<json-logger:logger doc:name="Get AlertDetails By Id Start Logger" doc:id="52a44ca5-fd1a-4b43-b348-72eb77be9e24" config-ref="JSON_Logger_Config" message="Get AlertDetails By Id Start Logger"/>
+		<ee:transform doc:name="Variables" doc:id="2d0501e2-2d9e-4d9f-af53-aa1e46b5cac8" >
+			<ee:message >
+			</ee:message>
+			<ee:variables >
+				<ee:set-variable variableName="custId" ><![CDATA[attributes.uriParams.'id']]></ee:set-variable>
+				<ee:set-variable variableName="subsId" ><![CDATA[attributes.uriParams.'subscriptionId']]></ee:set-variable>
+				<ee:set-variable variableName="alertId" ><![CDATA[attributes.uriParams.'alertId']]></ee:set-variable>
+			</ee:variables>
+		</ee:transform>
+		<try doc:name="Try" doc:id="1d29f8ff-ba06-423d-ae7c-5c8ecdf1dc86" >
+			<national-railway-train-services-api:get-alert-by-id-subscription-id-alert-id doc:name="Get alert by id subscription id alert id" doc:id="ade28902-65f1-44f3-832f-f8447e4d8452" config-ref="National_Railway_Train_Services_API_Config" id="#[vars.custId]" subscription-id="#[vars.subsId]" alert-id="#[vars.alertId]"/>
+			<error-handler >
+				<on-error-continue enableNotifications="true" logException="true" doc:name="On Error Continue" doc:id="12aedc09-3ab1-414f-a957-d88e157529e2" type="NATIONAL-RAILWAY-TRAIN-SERVICES-API:BAD_REQUEST, NATIONAL-RAILWAY-TRAIN-SERVICES-API:METHOD_NOT_ALLOWED, NATIONAL-RAILWAY-TRAIN-SERVICES-API:NOT_ACCEPTABLE, NATIONAL-RAILWAY-TRAIN-SERVICES-API:PARSING, NATIONAL-RAILWAY-TRAIN-SERVICES-API:SECURITY, NATIONAL-RAILWAY-TRAIN-SERVICES-API:TIMEOUT, NATIONAL-RAILWAY-TRAIN-SERVICES-API:TOO_MANY_REQUESTS, NATIONAL-RAILWAY-TRAIN-SERVICES-API:UNAUTHORIZED, NATIONAL-RAILWAY-TRAIN-SERVICES-API:UNSUPPORTED_MEDIA_TYPE, EXPRESSION, STREAM_MAXIMUM_SIZE_EXCEEDED">
+					<ee:transform doc:name="Error Message" doc:id="0b9c5c36-fd89-424d-ac03-e6a26cf0870c" >
+						<ee:message >
+							<ee:set-payload ><![CDATA[%dw 2.0
+output application/json
+---
+{
+	"Error Type": error.errorType.identifier,
+	"Error Message": error.errorMessage.payload,
+	"Error Description": error.detailedDescription
+}]]></ee:set-payload>
+						</ee:message>
+					</ee:transform>
+					<json-logger:logger doc:name="Get AlertDetails By Id Error Logger" doc:id="faa09749-4c2a-4f81-ae10-3ec4c9ca70fb" config-ref="JSON_Logger_Config" message="Get AlertDetails By Id Error Logger" priority="ERROR"/>
+				</on-error-continue>
+			</error-handler>
+		</try>
+		<ee:transform doc:name="Final Payload" doc:id="22ad7bc7-dd1d-42fe-bb02-cffe01cc3dd5" >
+			<ee:message >
+				<ee:set-payload ><![CDATA[%dw 2.0
+output application/json
+---
+if(isEmpty(payload))
+{
+	Message: "No Records Found"
+}
+else
+	payload
+]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+		<json-logger:logger doc:name="Get AlertDetails By Id End Logger" doc:id="73e3e658-ab59-4c59-9798-2e20cec21eb0" config-ref="JSON_Logger_Config" message="Get AlertDetails By Id Start Logger" tracePoint="END"/>
+		<error-handler >
+			<on-error-continue enableNotifications="true" logException="true" doc:name="On Error Continue" doc:id="c34c0b7c-2d7f-4f28-b46b-55abdd418f57" type="ANY">
+				<ee:transform doc:name="Error Message" doc:id="4a7f6c1e-e10a-4bbb-a7fe-538df0e64d09" >
+					<ee:message >
+						<ee:set-payload ><![CDATA[%dw 2.0
+output application/json
+---
+{
+	"Error Type": error.errorType.identifier,
+	"Error Message": error.errorMessage.payload,
+	"Error Description": error.detailedDescription
+}]]></ee:set-payload>
+					</ee:message>
+				</ee:transform>
+				<json-logger:logger doc:name="User AlertDetails ByID Error Logger" doc:id="a3970bd9-4678-451c-8aea-f259eff73906" config-ref="JSON_Logger_Config" message="User AlertDetails ByID Error Logger"/>
+			</on-error-continue>
+		</error-handler>
+	</flow>
+	<flow name="user-PasswordResetFlow" doc:id="0092929e-d018-4e13-b183-ab6d93ca7bd7" >
+		<json-logger:logger doc:name="User Password Reset_StartLogger" doc:id="0f8e82d8-4b5b-4a94-86e9-9cd3e88551ed" config-ref="JSON_Logger_Config" message="User Password Reset Start Logs"/>
+		<try doc:name="Try" doc:id="e59106d6-89cb-40ea-8fd5-1505dae67b1f" >
+			<user-authorisation-sapi:create-reset doc:name="Create reset" doc:id="8562f7ed-3a5d-4d1f-9ae6-f12fc0e8a131" config-ref="User_Authorisation_SAPI_Config" client-secret="ZvV0zILKHMZHCJHZPJevm8FzCKYZL-hwZCwACQlR" client-id="0oaq5q0yiyF3BQEkQ5d6"/>
+			<error-handler >
+				<on-error-continue enableNotifications="true" logException="true" doc:name="On Error Continue" doc:id="794c341e-178a-4437-a6f0-b18cc8b22a7b" type="USER-AUTHORISATION-SAPI:BAD_REQUEST, USER-AUTHORISATION-SAPI:METHOD_NOT_ALLOWED, USER-AUTHORISATION-SAPI:NOT_ACCEPTABLE, USER-AUTHORISATION-SAPI:PARSING, USER-AUTHORISATION-SAPI:SECURITY, USER-AUTHORISATION-SAPI:TIMEOUT, USER-AUTHORISATION-SAPI:TOO_MANY_REQUESTS, USER-AUTHORISATION-SAPI:UNAUTHORIZED, USER-AUTHORISATION-SAPI:UNSUPPORTED_MEDIA_TYPE, EXPRESSION, STREAM_MAXIMUM_SIZE_EXCEEDED">
+					<ee:transform doc:name="Error Payload" doc:id="36ce99a3-45c4-4101-9438-b2a28d504c8e" >
+						<ee:message >
+							<ee:set-payload ><![CDATA[%dw 2.0
+output application/json
+---
+if(vars.authPayload != null)
+{
+	"Error Payload": vars.authPayload	
+}
+else{
+	"Error Type": error.errorType.identifier,
+	"Error Message": error.errorMessage.payload,
+	"Error Description": error.detailedDescription
+}]]></ee:set-payload>
+						</ee:message>
+					</ee:transform>
+					<json-logger:logger doc:name="user-ResetPassword_ErrorLogger" doc:id="41f66b09-2634-4569-a383-4bec3646a3ef" config-ref="JSON_Logger_Config" message="user-ForgetPassword_ErrorLogs" priority="ERROR"/>
+				</on-error-continue>
+			</error-handler>
+		</try>
+		<json-logger:logger doc:name="User Password Reset_EndLogger" doc:id="c96523f6-b84a-41ba-8a15-a02630b31296" config-ref="JSON_Logger_Config" message="User Password Reset End Logs" tracePoint="END"/>
+	</flow>
+	<flow name="user-ForgetPasswordFlow" doc:id="a6150e8a-e933-4966-a25b-a1fae268eb1d" >
+		<json-logger:logger doc:name="User Forget Password Start Logger" doc:id="aa861b10-0261-4399-bd35-73ff17a607d3" config-ref="JSON_Logger_Config" message="User Forget Password Start Logs"/>
+		<try doc:name="Try" doc:id="cfac0a26-525d-4b98-b33e-9c6df8cbf4f3" >
+			<user-authorisation-sapi:create-forgot doc:name="Create forgot" doc:id="709d6603-5659-40fb-b8d3-8ea038b67c5c" config-ref="User_Authorisation_SAPI_Config" client-id="0oaq5q0yiyF3BQEkQ5d6" client-secret="ZvV0zILKHMZHCJHZPJevm8FzCKYZL-hwZCwACQlR"/>
+			<error-handler >
+				<on-error-continue enableNotifications="true" logException="true" doc:name="On Error Continue" doc:id="7e78b8c9-0334-4d91-8b84-07e6592b6a72" type="USER-AUTHORISATION-SAPI:BAD_REQUEST, USER-AUTHORISATION-SAPI:METHOD_NOT_ALLOWED, USER-AUTHORISATION-SAPI:NOT_ACCEPTABLE, USER-AUTHORISATION-SAPI:PARSING, USER-AUTHORISATION-SAPI:SECURITY, USER-AUTHORISATION-SAPI:TIMEOUT, USER-AUTHORISATION-SAPI:TOO_MANY_REQUESTS, USER-AUTHORISATION-SAPI:UNAUTHORIZED, USER-AUTHORISATION-SAPI:UNSUPPORTED_MEDIA_TYPE, EXPRESSION, STREAM_MAXIMUM_SIZE_EXCEEDED">
+					<ee:transform doc:name="Error Payload" doc:id="3f84349e-2c48-4f03-9f86-977adbb2c5d4">
+			<ee:message>
+				<ee:set-payload><![CDATA[%dw 2.0
+output application/json
+---
+if(vars.authPayload != null)
+{
+	"Error Payload": vars.authPayload	
+}
+else{
+	"Error Type": error.errorType.identifier,
+	"Error Message": error.errorMessage.payload,
+	"Error Description": error.detailedDescription
+}]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+					<json-logger:logger doc:name="user-ForgetPassword_ErrorLogger" doc:id="725e92b0-2838-4fe3-b670-0ade234737df" config-ref="JSON_Logger_Config" message="user-ForgetPassword_ErrorLogs" priority="ERROR"/>
+				</on-error-continue>
+			</error-handler>
+		</try>
+		<json-logger:logger doc:name="User Forget Password End Logger" doc:id="ba9057ad-276c-4e8b-8bf4-1ee4564632a9" config-ref="JSON_Logger_Config" message="User Forget Password End Logs" tracePoint="END"/>
+	</flow>
+</mule>

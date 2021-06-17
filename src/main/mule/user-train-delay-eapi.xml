@@ -1,0 +1,162 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<mule xmlns="http://www.mulesoft.org/schema/mule/core" xmlns:apikit="http://www.mulesoft.org/schema/mule/mule-apikit" xmlns:doc="http://www.mulesoft.org/schema/mule/documentation" xmlns:http="http://www.mulesoft.org/schema/mule/http" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd http://www.mulesoft.org/schema/mule/http http://www.mulesoft.org/schema/mule/http/current/mule-http.xsd http://www.mulesoft.org/schema/mule/mule-apikit http://www.mulesoft.org/schema/mule/mule-apikit/current/mule-apikit.xsd ">
+    <apikit:config name="user-train-delay-eapi-config" api="user-train-delay-eapi.raml" outboundHeadersMapName="outboundHeaders" httpStatusVarName="httpStatus" />
+    <flow name="user-train-delay-eapi-main">
+        <http:listener path="/api/*" config-ref="EAPI_HTTP_Listener_config">
+            <http:response statusCode="#[vars.httpStatus default 200]">
+                <http:headers><![CDATA[#[vars.outboundHeaders default {}]]]></http:headers>
+            </http:response>
+            <http:error-response statusCode="#[vars.httpStatus default 500]">
+                <http:body><![CDATA[#[payload]]]></http:body>
+                <http:headers><![CDATA[#[vars.outboundHeaders default {}]]]></http:headers>
+            </http:error-response>
+        </http:listener>
+        <apikit:router config-ref="user-train-delay-eapi-config" />
+        <error-handler>
+            <on-error-propagate type="APIKIT:BAD_REQUEST">
+                <ee:transform xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core" xsi:schemaLocation="http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd">
+                    <ee:message>
+                        <ee:set-payload><![CDATA[%dw 2.0
+output application/json
+---
+{message: "Bad request"}]]></ee:set-payload>
+                    </ee:message>
+                    <ee:variables>
+                        <ee:set-variable variableName="httpStatus">400</ee:set-variable>
+                    </ee:variables>
+                </ee:transform>
+            </on-error-propagate>
+            <on-error-propagate type="APIKIT:NOT_FOUND">
+                <ee:transform xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core" xsi:schemaLocation="http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd">
+                    <ee:message>
+                        <ee:set-payload><![CDATA[%dw 2.0
+output application/json
+---
+{message: "Resource not found"}]]></ee:set-payload>
+                    </ee:message>
+                    <ee:variables>
+                        <ee:set-variable variableName="httpStatus">404</ee:set-variable>
+                    </ee:variables>
+                </ee:transform>
+            </on-error-propagate>
+            <on-error-propagate type="APIKIT:METHOD_NOT_ALLOWED">
+                <ee:transform xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core" xsi:schemaLocation="http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd">
+                    <ee:message>
+                        <ee:set-payload><![CDATA[%dw 2.0
+output application/json
+---
+{message: "Method not allowed"}]]></ee:set-payload>
+                    </ee:message>
+                    <ee:variables>
+                        <ee:set-variable variableName="httpStatus">405</ee:set-variable>
+                    </ee:variables>
+                </ee:transform>
+            </on-error-propagate>
+            <on-error-propagate type="APIKIT:NOT_ACCEPTABLE">
+                <ee:transform xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core" xsi:schemaLocation="http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd">
+                    <ee:message>
+                        <ee:set-payload><![CDATA[%dw 2.0
+output application/json
+---
+{message: "Not acceptable"}]]></ee:set-payload>
+                    </ee:message>
+                    <ee:variables>
+                        <ee:set-variable variableName="httpStatus">406</ee:set-variable>
+                    </ee:variables>
+                </ee:transform>
+            </on-error-propagate>
+            <on-error-propagate type="APIKIT:UNSUPPORTED_MEDIA_TYPE">
+                <ee:transform xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core" xsi:schemaLocation="http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd">
+                    <ee:message>
+                        <ee:set-payload><![CDATA[%dw 2.0
+output application/json
+---
+{message: "Unsupported media type"}]]></ee:set-payload>
+                    </ee:message>
+                    <ee:variables>
+                        <ee:set-variable variableName="httpStatus">415</ee:set-variable>
+                    </ee:variables>
+                </ee:transform>
+            </on-error-propagate>
+            <on-error-propagate type="APIKIT:NOT_IMPLEMENTED">
+                <ee:transform xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core" xsi:schemaLocation="http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd">
+                    <ee:message>
+                        <ee:set-payload><![CDATA[%dw 2.0
+output application/json
+---
+{message: "Not Implemented"}]]></ee:set-payload>
+                    </ee:message>
+                    <ee:variables>
+                        <ee:set-variable variableName="httpStatus">501</ee:set-variable>
+                    </ee:variables>
+                </ee:transform>
+            </on-error-propagate>
+        </error-handler>
+    </flow>
+    <flow name="user-train-delay-eapi-console">
+        <http:listener path="/console/*" config-ref="EAPI_HTTP_Listener_config">
+            <http:response statusCode="#[vars.httpStatus default 200]">
+                <http:headers><![CDATA[#[vars.outboundHeaders default {}]]]></http:headers>
+            </http:response>
+            <http:error-response statusCode="#[vars.httpStatus default 500]">
+                <http:body><![CDATA[#[payload]]]></http:body>
+                <http:headers><![CDATA[#[vars.outboundHeaders default {}]]]></http:headers>
+            </http:error-response>
+        </http:listener>
+        <apikit:console config-ref="user-train-delay-eapi-config" />
+        <error-handler>
+            <on-error-propagate type="APIKIT:NOT_FOUND">
+                <ee:transform xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core" xsi:schemaLocation="http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd">
+                    <ee:message>
+                        <ee:set-payload><![CDATA[%dw 2.0
+output application/json
+---
+{message: "Resource not found"}]]></ee:set-payload>
+                    </ee:message>
+                    <ee:variables>
+                        <ee:set-variable variableName="httpStatus">404</ee:set-variable>
+                    </ee:variables>
+                </ee:transform>
+            </on-error-propagate>
+        </error-handler>
+    </flow>
+    <flow name="patch:\customers\(id):application\json:user-train-delay-eapi-config">
+        <flow-ref doc:name="user-Update-DetailsFlow" doc:id="39d53e46-debe-45a2-a3a9-b7abfa2da197" name="user-Update-DetailsFlow" />
+    </flow>
+    <flow name="patch:\customers\(id)\subscriptions\(subscriptionId):application\json:user-train-delay-eapi-config">
+        <flow-ref doc:name="user-SubscriptionUpdateFlow" doc:id="f5f9d0c8-9ee1-448c-8be2-49e9e2f2be68" name="user-SubscriptionUpdateFlow" />
+    </flow>
+    <flow name="get:\customers:user-train-delay-eapi-config">
+        <flow-ref doc:name="user-GetCustomerDetailsFlow" doc:id="bfd66b57-77e1-4688-b487-5a4f26ba8114" name="user-GetCustomerDetailsFlow" />
+    </flow>
+    <flow name="get:\customers\(id)\subscriptions:user-train-delay-eapi-config">
+        <flow-ref doc:name="user-GetSubscriptionFlow" doc:id="e64b7d14-6182-49b9-aa8e-0b9836395896" name="user-GetSubscriptionFlow" />
+    </flow>
+    <flow name="get:\customers\(id):user-train-delay-eapi-config">
+        <flow-ref doc:name="user-GetCustomerByIDFlow" doc:id="379002dd-d2d9-46da-ba6d-9a31cc62bfc2" name="user-GetCustomerByIDFlow" />
+    </flow>
+    <flow name="get:\customers\(id)\subscriptions\(subscriptionId):user-train-delay-eapi-config">
+        <flow-ref doc:name="user-GetSubscriptionByIDFlow" doc:id="d75d685c-961c-4a61-ae28-e9e1303f5c03" name="user-GetSubscriptionByIDFlow" />
+    </flow>
+    <flow name="post:\customers:application\json:user-train-delay-eapi-config">
+        <flow-ref doc:name="user-RegistrationFlow" doc:id="9ed5e07f-0776-40c6-820e-10ba1f7a2fb7" name="user-RegistrationFlow" />
+    </flow>
+    <flow name="post:\customers\(id)\subscriptions:application\json:user-train-delay-eapi-config">
+        <flow-ref doc:name="user-SubscriptionRegistrationFlow" doc:id="b2ea2264-378b-42d6-b146-478dab28b247" name="user-SubscriptionRegistrationFlow" />
+    </flow>
+    <flow name="post:\customers\forgot:application\json:user-train-delay-eapi-config">
+        <flow-ref doc:name="user-ForgetPasswordFlow" doc:id="63e54d03-3587-43f1-ae14-4c6ad456bfb2" name="user-ForgetPasswordFlow" />
+    </flow>
+    <flow name="post:\customers\login:application\json:user-train-delay-eapi-config">
+        <flow-ref doc:name="user-train-delay-AuthenticationFlow" doc:id="70c85262-18e0-4a68-b27b-d84a6dd60b3d" name="user-train-delay-AuthenticationFlow" />
+    </flow>
+    <flow name="post:\customers\reset:application\json:user-train-delay-eapi-config">
+        <flow-ref doc:name="user-PasswordResetFlow" doc:id="9ec00c7e-0a4c-4f5b-b835-45b87c5be0f9" name="user-PasswordResetFlow" />
+    </flow>
+    <flow name="get:\customers\(id)\subscriptions\(subscriptionId)\alerts:user-train-delay-eapi-config">
+        <flow-ref doc:name="user-GetAlertsFlow" doc:id="cff62600-1460-4ceb-907f-1a70e58aa3ce" name="user-GetAlertsFlow" />
+    </flow>
+    <flow name="get:\customers\(id)\subscriptions\(subscriptionId)\alerts\(alertId):user-train-delay-eapi-config">
+        <flow-ref doc:name="user-GetAlertDetails-ByIDFlow" doc:id="d77f9898-9a31-4ce4-bf0e-034b972b623f" name="user-GetAlertDetails-ByIDFlow" />
+    </flow>
+</mule>

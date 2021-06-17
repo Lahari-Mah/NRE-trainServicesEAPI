@@ -1,0 +1,203 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<types:mule xmlns:types="http://www.mulesoft.org/schema/mule/types">
+  <types:catalog>
+    <types:type name="customerDetailsType" format="json">
+      <types:shape format="weave" example="examples/customerDetailsType.json"><![CDATA[%dw 2.0
+
+type customerDetailsType = Array<{|  firstName: String,   lastName: String,   emailId: String,   phoneNo: String,   statusTypeId: Number {"typeId": "int"}|}> {"example": "[{\\\"firstName\\\":\\\"User1\\\",\\\"lastName\\\":\\\"UserLast1\\\",\\\"emailId\\\":\\\"User1@gmail.com\\\",\\\"phoneNo\\\":\\\"8765432599\\\",\\\"statusTypeId\\\":1},{\\\"firstName\\\":\\\"User1\\\",\\\"lastName\\\":\\\"UserLast1\\\",\\\"emailId\\\":\\\"User1@gmail.com\\\",\\\"phoneNo\\\":\\\"8765432599\\\",\\\"statusTypeId\\\":1}]"}
+
+]]></types:shape>
+    </types:type>
+    <types:type name="CustomerId" format="java">
+      <types:shape format="raml"><![CDATA[#%RAML 1.0 DataType
+type: string]]></types:shape>
+    </types:type>
+    <types:type name="SubscriptionType" format="json">
+      <types:shape format="weave" example="examples/subscriptionType.json"><![CDATA[%dw 2.0
+
+type SubscriptionType = Array<{|  fromTime: String,   fromStation: String,   toStation: String,   toTime: String,   journeyDate: String,   advanceNotifyTime: Number {"typeId": "int"},   alertService: String|}> {"example": "[{\\\"fromTime\\\":\\\"10:40:00\\\",\\\"fromStation\\\":\\\"LBG\\\",\\\"toStation\\\":\\\"CST\\\",\\\"toTime\\\":\\\"12:07:00\\\",\\\"journeyDate\\\":\\\"2021-05-21\\\",\\\"advanceNotifyTime\\\":60},{\\\"fromTime\\\":\\\"06:40:00\\\",\\\"fromStation\\\":\\\"BSK\\\",\\\"toStation\\\":\\\"RDG\\\",\\\"toTime\\\":\\\"08:17:00\\\",\\\"journeyDate\\\":\\\"2021-05-21\\\",\\\"advanceNotifyTime\\\":60,\\\"alertService\\\":\\\"Yes\\\"}]"}
+
+]]></types:shape>
+    </types:type>
+    <types:type name="SubscriptionId" format="java">
+      <types:shape format="raml"><![CDATA[#%RAML 1.0 DataType
+type: string]]></types:shape>
+    </types:type>
+    <types:type name="httpAttributes" format="java">
+      <types:shape format="java" element="org.mule.extension.http.api.HttpRequestAttributes"/>
+    </types:type>
+    <types:type name="BasicValue" format="java">
+      <types:shape format="raml"><![CDATA[#%RAML 1.0 DataType
+type: string]]></types:shape>
+    </types:type>
+    <types:type name="alertId" format="java">
+      <types:shape format="raml"><![CDATA[#%RAML 1.0 DataType
+type: string]]></types:shape>
+    </types:type>
+  </types:catalog>
+  <types:enrichment select="#e990f63a-b25e-4807-9ff1-e097c533d560">
+    <types:processor-declaration>
+      <types:input-event>
+        <types:message>
+          <types:payload type="customerDetailsType"/>
+        </types:message>
+      </types:input-event>
+    </types:processor-declaration>
+  </types:enrichment>
+  <types:enrichment select="#3e2de2c4-c6cb-4aef-9a0e-ecfafb52a7ac">
+    <types:processor-declaration>
+      <types:input-event>
+        <types:message>
+          <types:payload type="customerDetailsType"/>
+          <types:attributes type="httpAttributes"/>
+        </types:message>
+      </types:input-event>
+    </types:processor-declaration>
+  </types:enrichment>
+  <types:enrichment select="#56203fbc-cb34-4436-9e5d-d5715ef4a5be">
+    <types:processor-declaration>
+      <types:input-event>
+        <types:message>
+          <types:payload type="customerDetailsType"/>
+          <types:attributes type="CustomerId"/>
+        </types:message>
+      </types:input-event>
+      <types:output-event>
+        <types:message>
+          <types:payload type="customerDetailsType"/>
+        </types:message>
+        <types:variables>
+          <types:variable name="custId" type="CustomerId"/>
+        </types:variables>
+      </types:output-event>
+    </types:processor-declaration>
+  </types:enrichment>
+  <types:enrichment select="#2f59b94b-7242-440c-9294-8ae93cfe35fa">
+    <types:processor-declaration>
+      <types:input-event>
+        <types:message>
+          <types:payload type="SubscriptionType"/>
+          <types:attributes type="CustomerId"/>
+        </types:message>
+      </types:input-event>
+    </types:processor-declaration>
+  </types:enrichment>
+  <types:enrichment select="#4fe262a8-019e-4fce-a121-a6fd20774715">
+    <types:processor-declaration>
+      <types:input-event>
+        <types:message>
+          <types:payload type="SubscriptionType"/>
+          <types:attributes type="CustomerId"/>
+        </types:message>
+      </types:input-event>
+      <types:output-event>
+        <types:message>
+          <types:payload type="CustomerId"/>
+        </types:message>
+        <types:variables>
+          <types:variable name="subsId" type="SubscriptionId"/>
+        </types:variables>
+      </types:output-event>
+    </types:processor-declaration>
+  </types:enrichment>
+  <types:enrichment select="#88536a7f-1cda-45af-939f-413ddce13c69">
+    <types:processor-declaration>
+      <types:input-event>
+        <types:message>
+          <types:attributes type="CustomerId"/>
+        </types:message>
+      </types:input-event>
+    </types:processor-declaration>
+  </types:enrichment>
+  <types:enrichment select="#9eaea0e4-8edd-4948-8f69-21045a44f169">
+    <types:processor-declaration>
+      <types:input-event>
+        <types:message>
+          <types:attributes type="CustomerId"/>
+        </types:message>
+      </types:input-event>
+      <types:output-event>
+        <types:variables>
+          <types:variable name="subsId" type="SubscriptionId"/>
+          <types:variable name="custId" type="CustomerId"/>
+        </types:variables>
+      </types:output-event>
+    </types:processor-declaration>
+  </types:enrichment>
+  <types:enrichment select="#fc3fda9f-3b6f-476f-83ee-060491c47396">
+    <types:processor-declaration>
+      <types:input-event>
+        <types:variables>
+          <types:variable name="auth" type="BasicValue"/>
+        </types:variables>
+      </types:input-event>
+    </types:processor-declaration>
+  </types:enrichment>
+  <types:enrichment select="#47c8f130-b8f5-4691-8f5e-9f9eb07523bd">
+    <types:processor-declaration>
+      <types:input-event>
+        <types:message>
+          <types:attributes type="httpAttributes"/>
+        </types:message>
+      </types:input-event>
+      <types:output-event>
+        <types:variables>
+          <types:variable name="auth" type="BasicValue"/>
+          <types:variable name="custId" type="CustomerId"/>
+        </types:variables>
+      </types:output-event>
+    </types:processor-declaration>
+  </types:enrichment>
+  <types:enrichment select="#2186807d-e465-457b-9242-2517dad38b47">
+    <types:processor-declaration>
+      <types:input-event>
+        <types:message>
+          <types:attributes type="httpAttributes"/>
+        </types:message>
+      </types:input-event>
+    </types:processor-declaration>
+  </types:enrichment>
+  <types:enrichment select="#2d0501e2-2d9e-4d9f-af53-aa1e46b5cac8">
+    <types:processor-declaration>
+      <types:input-event>
+        <types:message>
+          <types:attributes type="httpAttributes"/>
+        </types:message>
+      </types:input-event>
+      <types:output-event>
+        <types:variables>
+          <types:variable name="subsId" type="SubscriptionId"/>
+          <types:variable name="custId" type="CustomerId"/>
+          <types:variable name="alertId" type="alertId"/>
+        </types:variables>
+      </types:output-event>
+    </types:processor-declaration>
+  </types:enrichment>
+  <types:enrichment select="#df6d1228-8714-4548-895f-13c20d244282">
+    <types:processor-declaration>
+      <types:input-event>
+        <types:message>
+          <types:payload type="customerDetailsType"/>
+        </types:message>
+      </types:input-event>
+    </types:processor-declaration>
+  </types:enrichment>
+  <types:enrichment select="#c1bfacea-65e5-4ff3-aeaa-4f370d66fbca">
+    <types:processor-declaration>
+      <types:input-event>
+        <types:message>
+          <types:payload type="alertId"/>
+        </types:message>
+      </types:input-event>
+    </types:processor-declaration>
+  </types:enrichment>
+  <types:enrichment select="#51e3dc78-afb2-4743-b64c-d535ba8f11d4">
+    <types:processor-declaration>
+      <types:input-event>
+        <types:message>
+          <types:payload type="alertId"/>
+        </types:message>
+      </types:input-event>
+    </types:processor-declaration>
+  </types:enrichment>
+</types:mule>
