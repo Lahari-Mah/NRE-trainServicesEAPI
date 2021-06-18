@@ -20,7 +20,7 @@ payload]]></ee:set-payload>
 		</ee:transform>
 		<validation:is-not-null doc:name="NotNullCheck_OnPayload" doc:id="6dc05a20-3bce-472f-b74c-b67d05538fea" config-ref="Validation_Config" value="#[payload != null and (payload.firstName != null and payload.lastName != null and payload.emailId != null and payload.phoneNo !=null and payload.password != null)]" message="Please provide all required field values"/>
 		<try doc:name="Try" doc:id="dc0ca8bc-f1c5-4ce8-ae49-f934a72a83b4" >
-			<user-authorisation-sapi:create-create doc:name="User Auth Registration " doc:id="db825b40-9c62-4397-bc97-e8bc0ea498b9" config-ref="User_Authorisation_SAPI_Config" target="authPayload" client-id="0oaq5q0yiyF3BQEkQ5d6" client-secret="ZvV0zILKHMZHCJHZPJevm8FzCKYZL-hwZCwACQlR"/>
+			<user-authorisation-sapi:create-create doc:name="User Auth Registration " doc:id="db825b40-9c62-4397-bc97-e8bc0ea498b9" config-ref="User_Authorisation_SAPI_Config" target="authPayload" client-id="${auth.clientId}" client-secret="${auth.clientSecret}"/>
 			<error-handler >
 				<on-error-continue enableNotifications="true" logException="true" doc:name="On Error Continue" doc:id="70b07521-a65a-45b6-b9ff-20cbc00bc7a0" type="USER-AUTHORISATION-SAPI:BAD_REQUEST, USER-AUTHORISATION-SAPI:METHOD_NOT_ALLOWED, USER-AUTHORISATION-SAPI:NOT_ACCEPTABLE, USER-AUTHORISATION-SAPI:PARSING, USER-AUTHORISATION-SAPI:SECURITY, USER-AUTHORISATION-SAPI:TIMEOUT, USER-AUTHORISATION-SAPI:TOO_MANY_REQUESTS, USER-AUTHORISATION-SAPI:UNAUTHORIZED, USER-AUTHORISATION-SAPI:UNSUPPORTED_MEDIA_TYPE, EXPRESSION, STREAM_MAXIMUM_SIZE_EXCEEDED">
 					<ee:transform doc:name="Error Message" doc:id="9e8b4936-47a2-49c6-94e7-967def4f0695" >
@@ -98,7 +98,7 @@ output application/json
 			</ee:message>
 		</ee:transform>
 		<try doc:name="Try" doc:id="e359fddc-a2a8-4d65-a47f-419581b88bf1" >
-			<national-railway-train-services-api:create-customer doc:name="Create customer" doc:id="728b494b-8a55-4286-9f2a-ec1bdea8afcf" config-ref="National_Railway_Train_Services_API_Config" />
+			<national-railway-train-services-api:create-customer doc:name="Create customer" doc:id="728b494b-8a55-4286-9f2a-ec1bdea8afcf" config-ref="National_Railway_Train_Services_API_Config" client-id="${user.clientId}" client-secret="${user.clientSecret}"/>
 			<error-handler >
 				<on-error-continue enableNotifications="true" logException="true" doc:name="On Error Continue" doc:id="4e3afb24-dcde-429f-96ae-683b05422c86" type="NATIONAL-RAILWAY-TRAIN-SERVICES-API:BAD_REQUEST, NATIONAL-RAILWAY-TRAIN-SERVICES-API:METHOD_NOT_ALLOWED, NATIONAL-RAILWAY-TRAIN-SERVICES-API:NOT_ACCEPTABLE, NATIONAL-RAILWAY-TRAIN-SERVICES-API:PARSING, NATIONAL-RAILWAY-TRAIN-SERVICES-API:SECURITY, NATIONAL-RAILWAY-TRAIN-SERVICES-API:TIMEOUT, NATIONAL-RAILWAY-TRAIN-SERVICES-API:TOO_MANY_REQUESTS, NATIONAL-RAILWAY-TRAIN-SERVICES-API:UNAUTHORIZED, NATIONAL-RAILWAY-TRAIN-SERVICES-API:UNSUPPORTED_MEDIA_TYPE, EXPRESSION, STREAM_MAXIMUM_SIZE_EXCEEDED">
 					<ee:transform doc:name="Error Message" doc:id="57bb4841-73d5-4851-9cd1-ae71c4d992b4" >
@@ -180,7 +180,7 @@ payload]]></ee:set-payload>
 		</ee:transform>
 		<validation:is-not-null doc:name="NotNullCheck_OnEmailId" doc:id="d81b9f04-7ca2-4014-a3d4-9b17f7655df9" config-ref="Validation_Config" value="#[payload.emailId != null and payload.password != null]" message="EmailId and Password are mandatory"/>
 		<try doc:name="Try" doc:id="ea1796b5-00e9-4c88-8b20-e167cbf987ae" >
-			<user-authorisation-sapi:create-auth doc:name="Authentication" doc:id="ca2169e5-41f3-403b-a00d-24e084e2f227" config-ref="User_Authorisation_SAPI_Config" target="authPayload" client-secret="ZvV0zILKHMZHCJHZPJevm8FzCKYZL-hwZCwACQlR" client-id="0oaq5q0yiyF3BQEkQ5d6"/>
+			<user-authorisation-sapi:create-auth doc:name="Authentication" doc:id="ca2169e5-41f3-403b-a00d-24e084e2f227" config-ref="User_Authorisation_SAPI_Config" target="authPayload" client-secret="${auth.clientSecret}" client-id="${auth.clientId}"/>
 			<error-handler >
 				<on-error-continue enableNotifications="true" logException="true" doc:name="On Error Continue" doc:id="e3176b13-f9d3-4e61-b1ee-669fe8d98319" type="USER-AUTHORISATION-SAPI:BAD_REQUEST, USER-AUTHORISATION-SAPI:METHOD_NOT_ALLOWED, USER-AUTHORISATION-SAPI:NOT_ACCEPTABLE, USER-AUTHORISATION-SAPI:PARSING, USER-AUTHORISATION-SAPI:SECURITY, USER-AUTHORISATION-SAPI:TIMEOUT, USER-AUTHORISATION-SAPI:TOO_MANY_REQUESTS, USER-AUTHORISATION-SAPI:UNAUTHORIZED, USER-AUTHORISATION-SAPI:UNSUPPORTED_MEDIA_TYPE, EXPRESSION, STREAM_MAXIMUM_SIZE_EXCEEDED">
 					<ee:transform doc:name="Error Payload" doc:id="032cf3fb-481c-4d07-b85b-0d11adb662fd" >
@@ -282,7 +282,7 @@ payload]]></ee:set-payload>
 			</ee:variables>
 		</ee:transform>
 		<try doc:name="Try" doc:id="5f7c39cf-2ee5-4a61-a19a-58f7bc7ccab8" >
-			<user-authorisation-sapi:create-update doc:name="AuthorizationUpdate" doc:id="cd94e4c9-6cd8-4865-a43b-55bc2bec2997" config-ref="User_Authorisation_SAPI_Config" target="authPayload" client-secret="ZvV0zILKHMZHCJHZPJevm8FzCKYZL-hwZCwACQlR" client-id="0oaq5q0yiyF3BQEkQ5d6"/>
+			<user-authorisation-sapi:create-update doc:name="AuthorizationUpdate" doc:id="cd94e4c9-6cd8-4865-a43b-55bc2bec2997" config-ref="User_Authorisation_SAPI_Config" target="authPayload" client-secret="${auth.clientSecret}" client-id="${auth.clientId}"/>
 			<error-handler >
 				<on-error-continue enableNotifications="true" logException="true" doc:name="On Error Continue" doc:id="b4e583da-7e4f-42e8-adf4-53ae51d25ca5" type="USER-AUTHORISATION-SAPI:BAD_REQUEST, USER-AUTHORISATION-SAPI:METHOD_NOT_ALLOWED, USER-AUTHORISATION-SAPI:NOT_ACCEPTABLE, USER-AUTHORISATION-SAPI:PARSING, USER-AUTHORISATION-SAPI:SECURITY, USER-AUTHORISATION-SAPI:TIMEOUT, USER-AUTHORISATION-SAPI:TOO_MANY_REQUESTS, USER-AUTHORISATION-SAPI:UNAUTHORIZED, USER-AUTHORISATION-SAPI:UNSUPPORTED_MEDIA_TYPE, EXPRESSION, STREAM_MAXIMUM_SIZE_EXCEEDED">
 					<ee:transform doc:name="Error Payload" doc:id="6ab44ce5-12a7-47f8-b8ae-6bd8118132a8" >
@@ -335,7 +335,7 @@ else{
 	<flow name="user-UpdateDB-DetailsFlow" doc:id="01caa788-7690-40a9-940b-6fae54af251c" >
 		<json-logger:logger doc:name="User Details DB Update_StartLogger" doc:id="12dcf12a-7933-42ad-b913-8c5c83d1de79" config-ref="JSON_Logger_Config" message="User Details DB Update Start Logs"/>
 		<try doc:name="Try" doc:id="ad0fe0f8-e8c0-4058-8353-fed8e1bec5a5" >
-			<national-railway-train-services-api:update-customer-by-id doc:name="Update customer by id" doc:id="cbb560d9-2a65-41de-8785-6950ca2d34ce" config-ref="National_Railway_Train_Services_API_Config" id="#[vars.custId]" />
+			<national-railway-train-services-api:update-customer-by-id doc:name="Update customer by id" doc:id="cbb560d9-2a65-41de-8785-6950ca2d34ce" config-ref="National_Railway_Train_Services_API_Config" id="#[vars.custId]" client-id="${user.clientId}" client-secret="${user.clientSecret}"/>
 			<error-handler >
 				<on-error-continue enableNotifications="true" logException="true" doc:name="On Error Continue" doc:id="6d1a14a8-b3c5-4e6d-a158-1597ac6781e2" type="NATIONAL-RAILWAY-TRAIN-SERVICES-API:BAD_REQUEST, NATIONAL-RAILWAY-TRAIN-SERVICES-API:METHOD_NOT_ALLOWED, NATIONAL-RAILWAY-TRAIN-SERVICES-API:NOT_ACCEPTABLE, NATIONAL-RAILWAY-TRAIN-SERVICES-API:PARSING, NATIONAL-RAILWAY-TRAIN-SERVICES-API:SECURITY, NATIONAL-RAILWAY-TRAIN-SERVICES-API:TIMEOUT, NATIONAL-RAILWAY-TRAIN-SERVICES-API:TOO_MANY_REQUESTS, NATIONAL-RAILWAY-TRAIN-SERVICES-API:UNAUTHORIZED, NATIONAL-RAILWAY-TRAIN-SERVICES-API:UNSUPPORTED_MEDIA_TYPE, EXPRESSION, STREAM_MAXIMUM_SIZE_EXCEEDED">
 					<ee:transform doc:name="Error Message" doc:id="bbc8ce0c-6fc5-41ff-832f-e166ed71f1ea" >
@@ -391,7 +391,7 @@ payload]]></ee:set-payload>
 			</ee:variables>
 		</ee:transform>
 		<try doc:name="Try" doc:id="e5995734-dd60-40ae-b2fc-4ec8184cf2cd" >
-			<national-railway-train-services-api:create-subscription-by-id doc:name="Create subscription by id" doc:id="07d52029-3862-4cd1-988c-0f3b258edcd2" config-ref="National_Railway_Train_Services_API_Config" id="#[vars.custId]"/>
+			<national-railway-train-services-api:create-subscription-by-id doc:name="Create subscription by id" doc:id="07d52029-3862-4cd1-988c-0f3b258edcd2" config-ref="National_Railway_Train_Services_API_Config" id="#[vars.custId]" client-id="${user.clientId}" client-secret="${user.clientSecret}"/>
 			<error-handler >
 				<on-error-continue enableNotifications="true" logException="true" doc:name="On Error Continue" doc:id="05eb0848-94cd-4aa0-8ed5-e0d622759872" type="NATIONAL-RAILWAY-TRAIN-SERVICES-API:BAD_REQUEST, NATIONAL-RAILWAY-TRAIN-SERVICES-API:METHOD_NOT_ALLOWED, NATIONAL-RAILWAY-TRAIN-SERVICES-API:NOT_ACCEPTABLE, NATIONAL-RAILWAY-TRAIN-SERVICES-API:PARSING, NATIONAL-RAILWAY-TRAIN-SERVICES-API:SECURITY, NATIONAL-RAILWAY-TRAIN-SERVICES-API:TIMEOUT, NATIONAL-RAILWAY-TRAIN-SERVICES-API:TOO_MANY_REQUESTS, NATIONAL-RAILWAY-TRAIN-SERVICES-API:UNAUTHORIZED, NATIONAL-RAILWAY-TRAIN-SERVICES-API:UNSUPPORTED_MEDIA_TYPE, EXPRESSION, STREAM_MAXIMUM_SIZE_EXCEEDED">
 					<ee:transform doc:name="Error Message" doc:id="b5a669bf-6de8-4c6e-8826-e594798b09b5" >
@@ -448,7 +448,7 @@ payload]]></ee:set-payload>
 			</ee:variables>
 		</ee:transform>
 		<try doc:name="Try" doc:id="1fb3dd33-d150-45d9-aa85-65277a6f5c17" >
-			<national-railway-train-services-api:update-subscription-by-id-subscription-id doc:name="Update subscription by id subscription id" doc:id="21898b0d-b2aa-4ab9-9eaf-471cfa9cf0e2" config-ref="National_Railway_Train_Services_API_Config" id="#[vars.custId]" subscription-id="#[vars.subsId]" />
+			<national-railway-train-services-api:update-subscription-by-id-subscription-id doc:name="Update subscription by id subscription id" doc:id="21898b0d-b2aa-4ab9-9eaf-471cfa9cf0e2" config-ref="National_Railway_Train_Services_API_Config" id="#[vars.custId]" subscription-id="#[vars.subsId]" client-id="${user.clientId}" client-secret="${user.clientSecret}"/>
 			<error-handler >
 				<on-error-continue enableNotifications="true" logException="true" doc:name="On Error Continue" doc:id="addca81f-68ae-4db4-844e-8710a6a3866f" type="NATIONAL-RAILWAY-TRAIN-SERVICES-API:BAD_REQUEST, NATIONAL-RAILWAY-TRAIN-SERVICES-API:METHOD_NOT_ALLOWED, NATIONAL-RAILWAY-TRAIN-SERVICES-API:NOT_ACCEPTABLE, NATIONAL-RAILWAY-TRAIN-SERVICES-API:PARSING, NATIONAL-RAILWAY-TRAIN-SERVICES-API:SECURITY, NATIONAL-RAILWAY-TRAIN-SERVICES-API:TIMEOUT, NATIONAL-RAILWAY-TRAIN-SERVICES-API:TOO_MANY_REQUESTS, NATIONAL-RAILWAY-TRAIN-SERVICES-API:UNAUTHORIZED, NATIONAL-RAILWAY-TRAIN-SERVICES-API:UNSUPPORTED_MEDIA_TYPE, EXPRESSION, STREAM_MAXIMUM_SIZE_EXCEEDED">
 					<ee:transform doc:name="Error Message" doc:id="01c93b84-6a7f-45cd-9f88-49ff8e8d3478" >
@@ -493,7 +493,7 @@ else{
 	<flow name="user-GetCustomerDetailsFlow" doc:id="2925ed3e-8780-46cf-8ee9-3754590b0535" >
 		<json-logger:logger doc:name="User GetCustomer Details_Start Logger" doc:id="2eeff4d1-3b23-4999-aa52-c61882e99fc3" config-ref="JSON_Logger_Config" message="User Get Customer Details Start Logs"/>
 		<try doc:name="Try" doc:id="d48eff46-a22c-4446-b9b5-130c36c3229c" >
-			<national-railway-train-services-api:get-customers doc:name="Get customers" doc:id="d1b73882-1a3a-4217-b2a8-3fce2b3db307" config-ref="National_Railway_Train_Services_API_Config" />
+			<national-railway-train-services-api:get-customers doc:name="Get customers" doc:id="d1b73882-1a3a-4217-b2a8-3fce2b3db307" config-ref="National_Railway_Train_Services_API_Config" client-id="${user.clientId}" client-secret="${user.clientSecret}"/>
 			<error-handler >
 				<on-error-continue enableNotifications="true" logException="true" doc:name="On Error Continue" doc:id="7cf00ec8-a0e4-462a-9e83-acc62acd998c" type="NATIONAL-RAILWAY-TRAIN-SERVICES-API:BAD_REQUEST, NATIONAL-RAILWAY-TRAIN-SERVICES-API:METHOD_NOT_ALLOWED, NATIONAL-RAILWAY-TRAIN-SERVICES-API:NOT_ACCEPTABLE, NATIONAL-RAILWAY-TRAIN-SERVICES-API:PARSING, NATIONAL-RAILWAY-TRAIN-SERVICES-API:SECURITY, NATIONAL-RAILWAY-TRAIN-SERVICES-API:TIMEOUT, NATIONAL-RAILWAY-TRAIN-SERVICES-API:TOO_MANY_REQUESTS, NATIONAL-RAILWAY-TRAIN-SERVICES-API:UNAUTHORIZED, NATIONAL-RAILWAY-TRAIN-SERVICES-API:UNSUPPORTED_MEDIA_TYPE, EXPRESSION, STREAM_MAXIMUM_SIZE_EXCEEDED">
 					<ee:transform doc:name="Error Payload" doc:id="3491b475-9f1e-4465-9471-62ac37aabf45" >
@@ -630,7 +630,7 @@ else{
 	<flow name="user-GetCustomerByIDDBFlow" doc:id="ce7c1ba6-e4b7-47ee-b1e1-2f179d652b42" >
 		<json-logger:logger doc:name="User GetCustomerDetails ByID DB Call Logger" doc:id="800b6bc7-4547-4f05-93e3-e027560e1ebf" config-ref="JSON_Logger_Config" message="User GetCustomerDetails ByID DB Call Start Logger"/>
 		<try doc:name="Try" doc:id="81402b53-f969-4165-82d5-8cdf838ab985">
-			<national-railway-train-services-api:get-customer-by-id doc:name="Get customer by id" doc:id="b59ecee6-4b69-4b33-993c-c0957af69d42" config-ref="National_Railway_Train_Services_API_Config" id="#[vars.custId]" />
+			<national-railway-train-services-api:get-customer-by-id doc:name="Get customer by id" doc:id="b59ecee6-4b69-4b33-993c-c0957af69d42" config-ref="National_Railway_Train_Services_API_Config" id="#[vars.custId]" client-id="${user.clientId}" client-secret="${user.clientSecret}"/>
 			<error-handler>
 				<on-error-continue enableNotifications="true" logException="true" doc:name="On Error Continue" doc:id="967d1f1f-511d-483b-b086-591764a778a1" type="NATIONAL-RAILWAY-TRAIN-SERVICES-API:BAD_REQUEST, NATIONAL-RAILWAY-TRAIN-SERVICES-API:METHOD_NOT_ALLOWED, NATIONAL-RAILWAY-TRAIN-SERVICES-API:NOT_ACCEPTABLE, NATIONAL-RAILWAY-TRAIN-SERVICES-API:PARSING, NATIONAL-RAILWAY-TRAIN-SERVICES-API:SECURITY, NATIONAL-RAILWAY-TRAIN-SERVICES-API:TIMEOUT, NATIONAL-RAILWAY-TRAIN-SERVICES-API:TOO_MANY_REQUESTS, NATIONAL-RAILWAY-TRAIN-SERVICES-API:UNAUTHORIZED, NATIONAL-RAILWAY-TRAIN-SERVICES-API:UNSUPPORTED_MEDIA_TYPE, EXPRESSION, STREAM_MAXIMUM_SIZE_EXCEEDED">
 					<ee:transform doc:name="Error Message" doc:id="e738cda6-ab51-4086-bceb-54def53c32fa">
@@ -661,7 +661,7 @@ output application/json
 			</ee:variables>
 		</ee:transform>
 		<try doc:name="Try" doc:id="05914441-d24b-4873-8706-28a8944e5f24" >
-			<national-railway-train-services-api:get-subscriptions-by-id doc:name="Get subscriptions by id" doc:id="ccf31a7f-1ef4-458a-9f83-7be3deb07d6c" config-ref="National_Railway_Train_Services_API_Config" id="#[vars.custId]"/>
+			<national-railway-train-services-api:get-subscriptions-by-id doc:name="Get subscriptions by id" doc:id="ccf31a7f-1ef4-458a-9f83-7be3deb07d6c" config-ref="National_Railway_Train_Services_API_Config" id="#[vars.custId]" client-id="${user.clientId}" client-secret="${user.clientSecret}"/>
 			<error-handler >
 				<on-error-continue enableNotifications="true" logException="true" doc:name="On Error Continue" doc:id="ac5dfe94-4a0f-42f3-9a91-26456ec59ae6" type="NATIONAL-RAILWAY-TRAIN-SERVICES-API:BAD_REQUEST, NATIONAL-RAILWAY-TRAIN-SERVICES-API:METHOD_NOT_ALLOWED, NATIONAL-RAILWAY-TRAIN-SERVICES-API:NOT_ACCEPTABLE, NATIONAL-RAILWAY-TRAIN-SERVICES-API:PARSING, NATIONAL-RAILWAY-TRAIN-SERVICES-API:SECURITY, NATIONAL-RAILWAY-TRAIN-SERVICES-API:TIMEOUT, NATIONAL-RAILWAY-TRAIN-SERVICES-API:TOO_MANY_REQUESTS, NATIONAL-RAILWAY-TRAIN-SERVICES-API:UNAUTHORIZED, NATIONAL-RAILWAY-TRAIN-SERVICES-API:UNSUPPORTED_MEDIA_TYPE, EXPRESSION, STREAM_MAXIMUM_SIZE_EXCEEDED">
 					<ee:transform doc:name="Error Message" doc:id="6198a8c4-d900-4d24-a7a6-d4b2687b8380" >
@@ -728,7 +728,7 @@ else{
 			</ee:variables>
 		</ee:transform>
 		<try doc:name="Try" doc:id="bf969a64-fd4c-44a2-9c2d-8ea5f3c7ebb7" >
-			<national-railway-train-services-api:get-subscription-by-id-subscription-id doc:name="Get subscription by id subscription id" doc:id="c1492d41-9e9c-4590-a489-4e6606460ef5" config-ref="National_Railway_Train_Services_API_Config" id="#[vars.custId]" subscription-id="#[vars.subsId]"/>
+			<national-railway-train-services-api:get-subscription-by-id-subscription-id doc:name="Get subscription by id subscription id" doc:id="c1492d41-9e9c-4590-a489-4e6606460ef5" config-ref="National_Railway_Train_Services_API_Config" id="#[vars.custId]" subscription-id="#[vars.subsId]" client-id="${user.clientId}" client-secret="${user.clientSecret}"/>
 			<error-handler >
 				<on-error-continue enableNotifications="true" logException="true" doc:name="On Error Continue" doc:id="c11445e6-6ed6-4bf1-b769-5a7122a54a2b" type="NATIONAL-RAILWAY-TRAIN-SERVICES-API:BAD_REQUEST, NATIONAL-RAILWAY-TRAIN-SERVICES-API:METHOD_NOT_ALLOWED, NATIONAL-RAILWAY-TRAIN-SERVICES-API:NOT_ACCEPTABLE, NATIONAL-RAILWAY-TRAIN-SERVICES-API:PARSING, NATIONAL-RAILWAY-TRAIN-SERVICES-API:SECURITY, NATIONAL-RAILWAY-TRAIN-SERVICES-API:TIMEOUT, NATIONAL-RAILWAY-TRAIN-SERVICES-API:TOO_MANY_REQUESTS, NATIONAL-RAILWAY-TRAIN-SERVICES-API:UNAUTHORIZED, NATIONAL-RAILWAY-TRAIN-SERVICES-API:UNSUPPORTED_MEDIA_TYPE, EXPRESSION, STREAM_MAXIMUM_SIZE_EXCEEDED">
 					<ee:transform doc:name="Error Message" doc:id="03eb59d1-5953-4d72-b06c-3d17b6386204" >
@@ -795,7 +795,7 @@ else{
 			</ee:variables>
 		</ee:transform>
 		<try doc:name="Try" doc:id="1f709549-c538-42b2-a372-a0e557e5039b" >
-			<national-railway-train-services-api:get-alerts-by-id-subscription-id doc:name="Get alerts by id subscription id" doc:id="ec6b2b64-eccc-4c02-8e80-e4c30bf6caad" config-ref="National_Railway_Train_Services_API_Config" id="#[vars.custId]" subscription-id="#[vars.subsId]"/>
+			<national-railway-train-services-api:get-alerts-by-id-subscription-id doc:name="Get alerts by id subscription id" doc:id="ec6b2b64-eccc-4c02-8e80-e4c30bf6caad" config-ref="National_Railway_Train_Services_API_Config" id="#[vars.custId]" subscription-id="#[vars.subsId]" client-id="${user.clientId}" client-secret="${user.clientSecret}"/>
 			<error-handler >
 				<on-error-continue enableNotifications="true" logException="true" doc:name="On Error Continue" doc:id="8b9510c4-a5d3-481b-b824-bad710cf509c" type="NATIONAL-RAILWAY-TRAIN-SERVICES-API:BAD_REQUEST, NATIONAL-RAILWAY-TRAIN-SERVICES-API:METHOD_NOT_ALLOWED, NATIONAL-RAILWAY-TRAIN-SERVICES-API:NOT_ACCEPTABLE, NATIONAL-RAILWAY-TRAIN-SERVICES-API:PARSING, NATIONAL-RAILWAY-TRAIN-SERVICES-API:SECURITY, NATIONAL-RAILWAY-TRAIN-SERVICES-API:TIMEOUT, NATIONAL-RAILWAY-TRAIN-SERVICES-API:TOO_MANY_REQUESTS, NATIONAL-RAILWAY-TRAIN-SERVICES-API:UNAUTHORIZED, NATIONAL-RAILWAY-TRAIN-SERVICES-API:UNSUPPORTED_MEDIA_TYPE, EXPRESSION, STREAM_MAXIMUM_SIZE_EXCEEDED">
 					<ee:transform doc:name="Error Payload" doc:id="1c735441-955d-43fb-be2e-8477a0021432" >
@@ -859,7 +859,7 @@ output application/json
 			</ee:variables>
 		</ee:transform>
 		<try doc:name="Try" doc:id="1d29f8ff-ba06-423d-ae7c-5c8ecdf1dc86" >
-			<national-railway-train-services-api:get-alert-by-id-subscription-id-alert-id doc:name="Get alert by id subscription id alert id" doc:id="ade28902-65f1-44f3-832f-f8447e4d8452" config-ref="National_Railway_Train_Services_API_Config" id="#[vars.custId]" subscription-id="#[vars.subsId]" alert-id="#[vars.alertId]"/>
+			<national-railway-train-services-api:get-alert-by-id-subscription-id-alert-id doc:name="Get alert by id subscription id alert id" doc:id="ade28902-65f1-44f3-832f-f8447e4d8452" config-ref="National_Railway_Train_Services_API_Config" id="#[vars.custId]" subscription-id="#[vars.subsId]" alert-id="#[vars.alertId]" client-id="${user.clientId}" client-secret="${user.clientSecret}"/>
 			<error-handler >
 				<on-error-continue enableNotifications="true" logException="true" doc:name="On Error Continue" doc:id="12aedc09-3ab1-414f-a957-d88e157529e2" type="NATIONAL-RAILWAY-TRAIN-SERVICES-API:BAD_REQUEST, NATIONAL-RAILWAY-TRAIN-SERVICES-API:METHOD_NOT_ALLOWED, NATIONAL-RAILWAY-TRAIN-SERVICES-API:NOT_ACCEPTABLE, NATIONAL-RAILWAY-TRAIN-SERVICES-API:PARSING, NATIONAL-RAILWAY-TRAIN-SERVICES-API:SECURITY, NATIONAL-RAILWAY-TRAIN-SERVICES-API:TIMEOUT, NATIONAL-RAILWAY-TRAIN-SERVICES-API:TOO_MANY_REQUESTS, NATIONAL-RAILWAY-TRAIN-SERVICES-API:UNAUTHORIZED, NATIONAL-RAILWAY-TRAIN-SERVICES-API:UNSUPPORTED_MEDIA_TYPE, EXPRESSION, STREAM_MAXIMUM_SIZE_EXCEEDED">
 					<ee:transform doc:name="Error Message" doc:id="0b9c5c36-fd89-424d-ac03-e6a26cf0870c" >
@@ -914,7 +914,7 @@ output application/json
 	<flow name="user-PasswordResetFlow" doc:id="0092929e-d018-4e13-b183-ab6d93ca7bd7" >
 		<json-logger:logger doc:name="User Password Reset_StartLogger" doc:id="0f8e82d8-4b5b-4a94-86e9-9cd3e88551ed" config-ref="JSON_Logger_Config" message="User Password Reset Start Logs"/>
 		<try doc:name="Try" doc:id="e59106d6-89cb-40ea-8fd5-1505dae67b1f" >
-			<user-authorisation-sapi:create-reset doc:name="Create reset" doc:id="8562f7ed-3a5d-4d1f-9ae6-f12fc0e8a131" config-ref="User_Authorisation_SAPI_Config" client-secret="ZvV0zILKHMZHCJHZPJevm8FzCKYZL-hwZCwACQlR" client-id="0oaq5q0yiyF3BQEkQ5d6"/>
+			<user-authorisation-sapi:create-reset doc:name="Create reset" doc:id="8562f7ed-3a5d-4d1f-9ae6-f12fc0e8a131" config-ref="User_Authorisation_SAPI_Config" client-secret="${auth.clientSecret}" client-id="${auth.clientId}"/>
 			<error-handler >
 				<on-error-continue enableNotifications="true" logException="true" doc:name="On Error Continue" doc:id="794c341e-178a-4437-a6f0-b18cc8b22a7b" type="USER-AUTHORISATION-SAPI:BAD_REQUEST, USER-AUTHORISATION-SAPI:METHOD_NOT_ALLOWED, USER-AUTHORISATION-SAPI:NOT_ACCEPTABLE, USER-AUTHORISATION-SAPI:PARSING, USER-AUTHORISATION-SAPI:SECURITY, USER-AUTHORISATION-SAPI:TIMEOUT, USER-AUTHORISATION-SAPI:TOO_MANY_REQUESTS, USER-AUTHORISATION-SAPI:UNAUTHORIZED, USER-AUTHORISATION-SAPI:UNSUPPORTED_MEDIA_TYPE, EXPRESSION, STREAM_MAXIMUM_SIZE_EXCEEDED">
 					<ee:transform doc:name="Error Payload" doc:id="36ce99a3-45c4-4101-9438-b2a28d504c8e" >
@@ -942,7 +942,7 @@ else{
 	<flow name="user-ForgetPasswordFlow" doc:id="a6150e8a-e933-4966-a25b-a1fae268eb1d" >
 		<json-logger:logger doc:name="User Forget Password Start Logger" doc:id="aa861b10-0261-4399-bd35-73ff17a607d3" config-ref="JSON_Logger_Config" message="User Forget Password Start Logs"/>
 		<try doc:name="Try" doc:id="cfac0a26-525d-4b98-b33e-9c6df8cbf4f3" >
-			<user-authorisation-sapi:create-forgot doc:name="Create forgot" doc:id="709d6603-5659-40fb-b8d3-8ea038b67c5c" config-ref="User_Authorisation_SAPI_Config" client-id="0oaq5q0yiyF3BQEkQ5d6" client-secret="ZvV0zILKHMZHCJHZPJevm8FzCKYZL-hwZCwACQlR"/>
+			<user-authorisation-sapi:create-forgot doc:name="Create forgot" doc:id="709d6603-5659-40fb-b8d3-8ea038b67c5c" config-ref="User_Authorisation_SAPI_Config" client-id="${auth.clientId}" client-secret="${auth.clientSecret}"/>
 			<error-handler >
 				<on-error-continue enableNotifications="true" logException="true" doc:name="On Error Continue" doc:id="7e78b8c9-0334-4d91-8b84-07e6592b6a72" type="USER-AUTHORISATION-SAPI:BAD_REQUEST, USER-AUTHORISATION-SAPI:METHOD_NOT_ALLOWED, USER-AUTHORISATION-SAPI:NOT_ACCEPTABLE, USER-AUTHORISATION-SAPI:PARSING, USER-AUTHORISATION-SAPI:SECURITY, USER-AUTHORISATION-SAPI:TIMEOUT, USER-AUTHORISATION-SAPI:TOO_MANY_REQUESTS, USER-AUTHORISATION-SAPI:UNAUTHORIZED, USER-AUTHORISATION-SAPI:UNSUPPORTED_MEDIA_TYPE, EXPRESSION, STREAM_MAXIMUM_SIZE_EXCEEDED">
 					<ee:transform doc:name="Error Payload" doc:id="3f84349e-2c48-4f03-9f86-977adbb2c5d4">

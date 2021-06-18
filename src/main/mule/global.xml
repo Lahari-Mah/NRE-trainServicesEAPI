@@ -42,7 +42,7 @@ output application/json
 }]]></ee:set-payload>
 				</ee:message>
 			</ee:transform>
-				<service-now-nre:create-incident doc:name="Create incident" doc:id="849c5c68-8dd4-470d-9b2f-2295d5f455b7" config-ref="ServiceNow_NRE_Config"/>
+				<service-now-nre:create-incident doc:name="Create incident" doc:id="849c5c68-8dd4-470d-9b2f-2295d5f455b7" config-ref="ServiceNow_NRE_Config" client-id="${serviceNow.clientId}" client-secret="${serviceNow.clientSecret}"/>
 				<raise-error doc:name="APP:SERVER_CONNECTIVITY" doc:id="37c1f63b-c400-4088-95d1-5e6a0409932b" type="APP:SERVER_CONNECTIVITY" description="Gateway issues through, Kindly appreciate your patience"/>
 				<error-handler >
 					<on-error-continue enableNotifications="true" logException="true" doc:name="On Error Continue" doc:id="1680e7d2-811d-4a12-974f-0f90c38f6ed2" type="APP:SERVER_CONNECTIVITY">
@@ -79,7 +79,7 @@ output application/json
 }]]></ee:set-payload>
 				</ee:message>
 			</ee:transform>
-				<service-now-nre:create-incident doc:name="Create incident" doc:id="da744323-ae48-4687-b5b9-877d548adabe" config-ref="ServiceNow_NRE_Config"/>
+				<service-now-nre:create-incident doc:name="Create incident" doc:id="da744323-ae48-4687-b5b9-877d548adabe" config-ref="ServiceNow_NRE_Config" client-id="${serviceNow.clientId}" client-secret="${serviceNow.clientSecret}"/>
 				<raise-error doc:name="APP:SERVER_CONNECTIVITY" doc:id="408ea8f1-2079-444c-ada9-33bf85a76039" type="APP:SERVER_CONNECTIVITY" description="Gateway issues through, Kindly appreciate your patience"/>
 				<error-handler >
 					<on-error-continue enableNotifications="true" logException="true" doc:name="On Error Continue" doc:id="8b0ac0cc-3b42-45a4-9ece-b73c1f978196" type="APP:SERVER_CONNECTIVITY">

@@ -114,18 +114,6 @@
         </dependency>
     	<dependency>
             <groupId>ce59e7c2-b990-4fe5-98a4-b5dba8efff20</groupId>
-            <artifactId>mule-plugin-nationalrailway-servicenow-sapi</artifactId>
-            <version>1.0.0</version>
-            <classifier>mule-plugin</classifier>
-        </dependency>
-    	<dependency>
-            <groupId>ce59e7c2-b990-4fe5-98a4-b5dba8efff20</groupId>
-            <artifactId>mule-plugin-user-services-sapi</artifactId>
-            <version>1.0.0</version>
-            <classifier>mule-plugin</classifier>
-        </dependency>
-    	<dependency>
-            <groupId>ce59e7c2-b990-4fe5-98a4-b5dba8efff20</groupId>
             <artifactId>mule-plugin-user-auth-sapi</artifactId>
             <version>1.0.0</version>
             <classifier>mule-plugin</classifier>
@@ -154,6 +142,18 @@
             <version>1.0.2</version>
             <classifier>raml</classifier>
             <type>zip</type>
+        </dependency>
+    	<dependency>
+            <groupId>ce59e7c2-b990-4fe5-98a4-b5dba8efff20</groupId>
+            <artifactId>mule-plugin-nationalrailway-servicenow-sapi</artifactId>
+            <version>1.0.1</version>
+            <classifier>mule-plugin</classifier>
+        </dependency>
+    	<dependency>
+            <groupId>ce59e7c2-b990-4fe5-98a4-b5dba8efff20</groupId>
+            <artifactId>mule-plugin-user-services-sapi</artifactId>
+            <version>1.0.4</version>
+            <classifier>mule-plugin</classifier>
         </dependency>
     </dependencies>
 
