@@ -29,7 +29,7 @@ pipeline
     
     stage('Perform Regression Testing'){
       steps{
-    		sh 'newman run /Users/rm/Desktop/NjcLabs/newman/getDBSoapDetails.postman_collection.json'
+    		sh 'newman run /Users/rm/Desktop/NjcLabs/newman/getCustomerEAPI.postman_collection.json'
     	 }
     }
   }
