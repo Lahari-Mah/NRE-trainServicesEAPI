@@ -152,7 +152,7 @@
     	<dependency>
             <groupId>ce59e7c2-b990-4fe5-98a4-b5dba8efff20</groupId>
             <artifactId>mule-plugin-user-services-sapi</artifactId>
-            <version>1.0.4</version>
+            <version>1.0.5</version>
             <classifier>mule-plugin</classifier>
         </dependency>
     </dependencies>
